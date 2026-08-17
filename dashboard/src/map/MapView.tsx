@@ -60,6 +60,15 @@ export function MapView({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const fittedBoundsRef = useRef<string | null>(null);
+  const onMapClickRef = useRef(onMapClick);
+  const onHotspotClickRef = useRef(onHotspotClick);
+  const onStationClickRef = useRef(onStationClick);
+
+  useEffect(() => {
+    onMapClickRef.current = onMapClick;
+    onHotspotClickRef.current = onHotspotClick;
+    onStationClickRef.current = onStationClick;
+  });
 
   function whenReady(map: maplibregl.Map, callback: () => void) {
     if (map.isStyleLoaded()) {
@@ -88,15 +97,15 @@ export function MapView({
       })[0];
       if (stationFeature && stationFeature.properties) {
         const props = stationFeature.properties as unknown as Station;
-        onStationClick(props);
+        onStationClickRef.current(props);
         return;
       }
       const hotspotFeature = map.queryRenderedFeatures(point, {
         layers: ["hotspots-fill", "hotspots-outline"],
       })[0];
-      onMapClick(event.lngLat.lat, event.lngLat.lng);
+      onMapClickRef.current(event.lngLat.lat, event.lngLat.lng);
       if (hotspotFeature && hotspotFeature.properties) {
-        onHotspotClick(hotspotFeature.properties as unknown as HotspotProperties);
+        onHotspotClickRef.current(hotspotFeature.properties as unknown as HotspotProperties);
       }
     });
 
