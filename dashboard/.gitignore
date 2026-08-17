@@ -1,0 +1,22 @@
+# Production build artifacts
+dist/
+dist-ssr/
+
+# Dependencies
+node_modules/
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# TypeScript
+*.tsbuildinfo

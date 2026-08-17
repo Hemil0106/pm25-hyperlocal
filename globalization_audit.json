@@ -1,0 +1,200 @@
+{
+  "audit_id": "globalization-audit-001",
+  "date": "2026-08-14",
+  "project": "PM2.5 Hyperlocal Mapping (Delhi Prototype, Milestones 1-14 locked)",
+  "purpose": "Phase 1 audit: enumerate every geographic/location-specific dependency prior to a backward-compatible globalization refactor.",
+  "method": "Source-wide search of config.yaml, run.py, src/**/*.py, api/**/*.py, dashboard/src/**/*.{ts,tsx}, tests/*.py, README.md, docs/architecture.md. Generated artifacts (data/processed, data/outputs, models) referenced only as corroboration.",
+  "total_findings": 146,
+  "categories": {
+    "delhi_aoi_coordinates": {
+      "count": 20,
+      "severity": "critical",
+      "summary": "Delhi bbox (77.0-77.4 lon / 28.4-28.8 lat) and Delhi feature coordinates embedded in config, sample-data generators, and dashboard map center.",
+      "findings": [
+        "config.yaml:7 name: \"Delhi Prototype\"",
+        "config.yaml:8 boundary_file: \"data/raw/aoi.geojson\"",
+        "data/raw/aoi.geojson:6 polygon [[77.4,28.4],[77.4,28.8],[77.0,28.8],[77.0,28.4],[77.4,28.4]]",
+        "src/data_pipeline.py:797-801 5 Delhi station rows (Punjabi Bagh/India Gate/Dwarka/UoD/Rohini coords)",
+        "src/data_pipeline.py:1616-1617 sample lat/lon grids np.arange(28.35,28.86,0.1)/np.arange(76.95,77.46,0.1)",
+        "src/data_pipeline.py:2123,2136-2137 NDVI bounds (77.0,28.8,77.4,28.4) + center (77.21,28.61)",
+        "src/data_pipeline.py:2766,2781 DEM bounds + Yamuna river at lon 77.2",
+        "src/data_pipeline.py:3270,3321 OSM bounds + center (77.20,28.62)",
+        "src/data_pipeline.py:3793,3805 VIIRS bounds + center (77.21,28.61)",
+        "dashboard/src/map/MapView.tsx:75 center [77.2,28.6]",
+        "dashboard/src/map/MapView.tsx:207 marker [77.2,28.6]"
+      ]
+    },
+    "crs_hardcoding": {
+      "count": 45,
+      "severity": "critical",
+      "summary": "EPSG:32643 (UTM zone 43N, central meridian 75E) assumed everywhere; EPSG:4326 used as project CRS. Not globally valid.",
+      "findings": [
+        "config.yaml:20-21 crs.project EPSG:4326 / crs.metric EPSG:32643",
+        "config.yaml:87 osm.metric_crs EPSG:32643",
+        "config.yaml:256 alignment.analysis_crs EPSG:32643",
+        "src/data_pipeline.py:593,598,601,684,2280-2320,2583,6454 to_crs(\"EPSG:32643\")",
+        "src/data_pipeline.py:5458-5463 string-matching \"32643\"/\"4326\" in src_crs",
+        "src/data_pipeline.py:6257 \"CRS\": \"EPSG:32643 (WGS84 / UTM zone 43N)\"",
+        "src/data_pipeline.py:61,1099-1478,2034-2035,2175,2555-2558,2677-2678,3928,4288,5297,5794,6131,6381-6397 to_crs(\"EPSG:4326\")",
+        "dashboard/src/map/raster.ts:71 default source CRS \"EPSG:32643\"",
+        "dashboard/src/map/raster.ts:104 proj4(sourceCrs, \"EPSG:4326\")",
+        "api/main.py:177 warp_transform(\"EPSG:4326\", crs, ...)",
+        "tests/test_milestone11_hotspots.py:10 CRS = \"EPSG:32643\"",
+        "tests/test_api.py:32 warp_transform(\"EPSG:4326\", src.crs, ...)"
+      ]
+    },
+    "grid_dimension_assumptions": {
+      "count": 4,
+      "severity": "high",
+      "summary": "Grids are mostly built dynamically from AOI bounds, but one hard-coded cell count exists.",
+      "findings": [
+        "src/data_pipeline.py:5908 parent_1km_valid_coverage denominator hard-coded to 1804 cells",
+        "src/data_pipeline.py:3939-3940 grid IDs 3-digit (1km) / 4-digit (500m)",
+        "src/data_pipeline.py:2959 OSM analysis grid ID f\"{c:03d}_{r:03d}\"",
+        "corroboration: data/processed/master_alignment_qc_report.json 1804 / 7094 cells"
+      ]
+    },
+    "date_hardcoding": {
+      "count": 10,
+      "severity": "medium",
+      "summary": "Dates centralized in config but embedded in sample data, tests, and checklist.",
+      "findings": [
+        "config.yaml:11-12 time.start_date 2025-01-01 / end_date 2025-01-07",
+        "config.yaml:80 ndvi.composite_start_date 2025-01-01",
+        "config.yaml:131 viirs.temporal.date 2025-01-01",
+        "config.yaml:158,175,221 default_date 2025-01-01 (inference/downscaling/aqi)",
+        "src/data_pipeline.py:804 pd.date_range(\"2025-01-01\",\"2025-01-07\",freq=\"3h\")",
+        "src/data_pipeline.py:827-833 CPCB sample timestamps 2025-01-07",
+        "tests/test_api.py:18 KNOWN_DATE = \"2025-01-01\"",
+        "SIH_DEMO_CHECKLIST.md:11 expects 2025-01-01"
+      ]
+    },
+    "cpcb_only_assumptions": {
+      "count": 11,
+      "severity": "critical",
+      "summary": "CPCB treated as the only ground-truth source; India-only validation window (lat 5-40 / lon 65-100).",
+      "findings": [
+        "config.yaml:37-50 cpcb section + valid_bounds (India-only)",
+        "src/data_pipeline.py:492,629,756 timezone Asia/Kolkata default",
+        "src/data_pipeline.py:797-801 5 Delhi station rows",
+        "src/data_pipeline.py:831 out_of_bounds test lat 91.0 (India-centric)",
+        "README.md:25,27 CPCB textual framing"
+      ]
+    },
+    "output_filename_patterns": {
+      "count": 14,
+      "severity": "medium",
+      "summary": "Output filename patterns encode scope/date but no region namespace; not overwrite-safe for global outputs.",
+      "findings": [
+        "api/main.py:53-63 pm25_500m_{date}.tif, pm25_1km_{date}.tif, aqi_500m_{date}.tif, hotspots_500m.geojson, hotspot_statistics.json, final_metadata.json, uncertainty_status.json, cpcb_station_summary.parquet, cpcb_pm25_daily.parquet, model_feature_importance.csv, model_metadata.json",
+        "src/data_pipeline.py:5233-5291,5405,5748-6203,6469-6475 same patterns"
+      ]
+    },
+    "dashboard_map_center": {
+      "count": 4,
+      "severity": "high",
+      "summary": "Map initialized at Delhi center/zoom; tests embed Delhi coordinates.",
+      "findings": [
+        "dashboard/src/map/MapView.tsx:75 center [77.2,28.6] zoom 10",
+        "dashboard/src/map/MapView.tsx:207 marker [77.2,28.6]",
+        "dashboard/src/App.test.tsx:33-203 Delhi coords in mocks",
+        "dashboard/src/api.test.ts Delhi test params"
+      ]
+    },
+    "aoi_geometry_ingestion": {
+      "count": 3,
+      "severity": "high",
+      "summary": "AOI read from a single fixed boundary file.",
+      "findings": [
+        "config.yaml:8 boundary_file data/raw/aoi.geojson",
+        "data/raw/aoi.geojson:6 Delhi polygon",
+        "src/data_pipeline.py:36-66 get_aoi() reads config[\"study_area\"][\"boundary_file\"]"
+      ]
+    },
+    "osm_assumptions": {
+      "count": 5,
+      "severity": "medium",
+      "summary": "OSM is already AOI-driven (graph_from_polygon) but metric CRS and grid resolution are Delhi-hardened.",
+      "findings": [
+        "src/data_pipeline.py:3101-3105 osmnx.graph_from_polygon(polygon, network_type=\"drive\")",
+        "config.yaml:89-103 highway_types / major_highway_types",
+        "src/data_pipeline.py:3138 grid_resolution_m default 1000",
+        "config.yaml:86 road_density.parquet output"
+      ]
+    },
+    "aqi_cpcb_tables": {
+      "count": 5,
+      "severity": "high",
+      "summary": "CPCB AQI breakpoints/categories duplicated in config, data_pipeline, and dashboard colormaps.",
+      "findings": [
+        "config.yaml:178-222 aqi breakpoints + categories (GOOD..SEVERE)",
+        "src/data_pipeline.py:5960-5976 _AQI_CATEGORY_ORDER / _AQI_CPCB_COLORS",
+        "src/data_pipeline.py:6019 clip(0,500)",
+        "dashboard/src/colormaps.ts:2-24 CPCB_CATEGORIES / PM25_BINS",
+        "tests/test_milestone11_aqi.py:14-29 assertions"
+      ]
+    },
+    "path_assumptions": {
+      "count": 9,
+      "severity": "medium",
+      "summary": "Some paths hard-coded in data_pipeline instead of config.",
+      "findings": [
+        "config.yaml:26-31 paths raw/processed/outputs/models/logs",
+        "src/data_pipeline.py:4052 processed = PROJECT_ROOT/\"data/processed\" (hard-coded)",
+        "src/data_pipeline.py:4892-4905 hard-coded processed paths",
+        "config.yaml:39-121 per-dataset input_file paths"
+      ]
+    },
+    "sample_data_bounds": {
+      "count": 8,
+      "severity": "medium",
+      "summary": "Synthetic/sample raster generators embed Delhi bounds, resolutions, and lat-scale.",
+      "findings": [
+        "src/data_pipeline.py:2122 NDVI resolution_deg 0.0025",
+        "src/data_pipeline.py:2768 DEM resolution_deg 0.001",
+        "src/data_pipeline.py:3792 VIIRS resolution_deg 0.0041667",
+        "src/data_pipeline.py:3299-3315 OSM sample offsets",
+        "src/data_pipeline.py:2152-2158,3831-3840 cloud/suburb row/col slices",
+        "src/data_pipeline.py:3817-3818 VIIRS suburb (77.05,28.55)",
+        "src/data_pipeline.py:2143 np.sin(lat_grid*40.0)"
+      ]
+    },
+    "resolution_wiring": {
+      "count": 8,
+      "severity": "low",
+      "summary": "1000m/500m resolutions are configurable and wired through config; resolution constants fine for global reuse.",
+      "findings": [
+        "config.yaml:16-17 coarse_resolution_m 1000 / target_resolution_m 500",
+        "config.yaml:157,163-164,257-258 resolution wiring",
+        "api/main.py:65-66 RESOLUTION_MAP {\"500\":500,\"1000\":1000}",
+        "tests/test_milestone11_hotspots.py:9 RES=500",
+        "src/data_pipeline.py:3138 grid_resolution_m default 1000"
+      ]
+    }
+  },
+  "architecture_observations": [
+    "Pipeline is mostly AOI-driven: grids built from aoi.total_bounds; raster dims from frame bounds. Dominant hard-coded geography is in sample-data generators and one 1804-cell constant.",
+    "EPSG:32643 is baked in at all layers including a dashboard string-match and API warping; must be replaced by a centralized CRS utility.",
+    "API is deliberately data-driven (reads existing files only) - geographic coupling limited to filename patterns and fixed map center.",
+    "Only date 2025-01-01 has generated output; no other dates are available."
+  ],
+  "globalization_scope": [
+    "config -> AOI (named_region/bbox/geojson/global)",
+    "centralized CRS utility (EPSG:4326 geographic + per-AOI projected + geodesic area/length)",
+    "AOI-dependent grid generation (1km/500m) with grid_id/parent_grid_id/tile_id",
+    "tile-based global processing (configurable tile size, merge, caching)",
+    "AOI-aware dataset ingestion interfaces + dataset registry + data availability",
+    "generalized ground-truth schema (station_id/source/country/lat/lon/timestamp/PM2.5/units/quality_flag) with CPCB preserved as India source",
+    "model scopes (prototype_local/regional/global) with honest availability",
+    "grouped spatial validation (LOO by station/city/region/country)",
+    "generalized inference (date/AOI/resolution/model_scope), AQI schemes (india_cpcb/us_epa/none), AOI-relative hotspot detection",
+    "dashboard Global/India/Delhi/Custom AOI modes with honest status"
+  ],
+  "safety_constraints": [
+    "Preserve Delhi prototype unchanged (run.py, uvicorn api.main:app, npm run dev, existing tests).",
+    "No fabricated global PM2.5, accuracy, confidence, or uncertainty.",
+    "No use of the Delhi-trained model as a global model; global model scope stays unavailable until trained+validated on global observations.",
+    "No silent AQI-standard mixing; AQI standard always labeled.",
+    "Hotspots always labeled 'predicted high-pollution zone'."
+  ]
+}

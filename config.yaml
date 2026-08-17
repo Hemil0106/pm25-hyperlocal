@@ -1,0 +1,475 @@
+project:
+  name: "PM2.5 Hyperlocal Mapping"
+  mode: "hackathon_prototype"
+  random_seed: 42
+
+study_area:
+  name: "Delhi Prototype"
+  boundary_file: "data/raw/aoi.geojson"
+
+time:
+  start_date: "2025-01-01"
+  end_date: "2025-01-07"
+  frequency: "daily"
+
+spatial:
+  coarse_resolution_m: 1000
+  target_resolution_m: 500
+
+crs:
+  project: "EPSG:4326"
+  metric: "EPSG:32643"
+
+target:
+  variable: "PM2.5"
+
+paths:
+  raw: "data/raw"
+  processed: "data/processed"
+  outputs: "data/outputs"
+  models: "models"
+  logs: "logs"
+
+datasets:
+  aod:
+    enabled: true
+    product: "MODIS_MAIAC_MCD19A2"
+  cpcb:
+    enabled: true
+    input_file: "data/raw/cpcb/cpcb_pm25.csv"
+    timestamp_column: "timestamp"
+    station_id_column: "station_id"
+    latitude_column: "latitude"
+    longitude_column: "longitude"
+    pm25_column: "PM2.5"
+    timezone: "Asia/Kolkata"
+    valid_bounds:
+      min_lat: 5.0
+      max_lat: 40.0
+      min_lon: 65.0
+      max_lon: 100.0
+  weather:
+    enabled: true
+    source: "ERA5-Land"
+    variables:
+      - temperature
+      - relative_humidity
+      - wind_u
+      - wind_v
+      - wind_speed
+      - wind_direction
+    temporal_resolution: "hourly"
+    aggregation: "daily"
+    input_file: "data/raw/weather/era5_land.nc"
+    boundary_layer_height:
+      enabled: false
+  ndvi:
+    enabled: true
+    product: "MODIS_Terra_MOD13Q1_v6.1"
+    source: "NASA_Earthdata_LP_DAAC"
+    input_file: "data/raw/ndvi/ndvi_input.tif"
+    ndvi_band: "250m 16 days NDVI"
+    reliability_band: "250m 16 days pixel reliability"
+    scale_factor: 0.0001
+    fill_value: -3000
+    valid_range: [-2000, 10000]
+    keep_reliability: [0, 1]
+    temporal:
+      resolution: "16-day composite"
+      composite_period_days: 16
+      composite_start_date: "2025-01-01"
+  osm:
+    enabled: true
+    source: "OpenStreetMap"
+    raw_dir: "data/raw/osm"
+    input_file: "data/raw/osm/osm_roads.geojson"
+    output_file: "data/processed/road_density.parquet"
+    metric_crs: "EPSG:32643"
+    grid_resolution_m: 1000
+    highway_types:
+      - motorway
+      - trunk
+      - primary
+      - secondary
+      - tertiary
+      - unclassified
+      - residential
+      - living_street
+      - service
+    major_highway_types:
+      - motorway
+      - trunk
+      - primary
+      - secondary
+    visualization: true
+  dem:
+    enabled: true
+    product: "NASA_SRTM_GL1_v003"
+    source: "NASA_Earthdata_LP_DAAC"
+    raw_dir: "data/raw/dem"
+    output_file: "data/processed/elevation.tif"
+    nodata: -32768
+    resampling: "bilinear"
+    resample_to_grid: false
+    target_resolution_deg: 0.0025
+    slope_aspect: false
+  viirs:
+    enabled: true
+    product: "NASA_VIIRS_VNP46A2_v2.0"
+    source: "NASA_LAADS_DAAC"
+    raw_dir: "data/raw/viirs"
+    input_file: "data/raw/viirs/viirs_input.tif"
+    radiance_band: "DNB_BRDF-Corrected_NTL"
+    quality_band: "Mandatory_Quality_Flag"
+    hdf_grid: "LGS_VNP46A2"
+    scale_factor: 1.0
+    fill_value: -999.9
+    keep_quality: [0]
+    units: "nW/cm2/sr"
+    temporal:
+      resolution: "daily"
+      date: "2025-01-01"
+    visualization: true
+
+model:
+  baseline: "RandomForest"
+  primary: "XGBoost"
+  dataset_mode: "fallback"
+  random_seed: 42
+  validation_strategy: "leave_one_group_out"
+  random_forest:
+    n_estimators: 200
+    max_depth: 6
+    min_samples_leaf: 2
+  xgboost:
+    n_estimators: 200
+    max_depth: 3
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+  output_dir: "models"
+
+inference:
+  enabled: true
+  model: "xgboost"
+  spatial_resolution_m: 1000
+  default_date: "2025-01-01"
+  nodata: -9999.0
+
+downscaling:
+  enabled: true
+  parent_resolution_m: 1000
+  target_resolution_m: 500
+  method: "residual"
+  residual_model: "random_forest"
+  residual_features:
+    - NDVI
+    - elevation_m
+    - road_density
+    - night_lights
+  minimum_training_samples: 20
+  enforce_parent_consistency: true
+  experimental_mode: true
+  default_date: "2025-01-01"
+  nodata: -9999.0
+
+aqi:
+  enabled: true
+  methodology: "CPCB_NATIONAL_AQI"
+  pollutant: "PM2.5"
+  averaging_period: "24h"
+  rounding: "nearest_integer"
+  # CPCB PM2.5 (24-hour) concentration breakpoints with corresponding
+  # AQI sub-index ranges. Linear interpolation within each interval:
+  # I = (I_high - I_low)/(C_high - C_low) * (C - C_low) + I_low
+  # The top interval uses a documented extrapolation ceiling (350 ug/m3)
+  # and the AQI value is clamped to [0, 500].
+  breakpoints:
+    - concentration_low: 0
+      concentration_high: 30
+      aqi_low: 0
+      aqi_high: 50
+    - concentration_low: 31
+      concentration_high: 60
+      aqi_low: 51
+      aqi_high: 100
+    - concentration_low: 61
+      concentration_high: 90
+      aqi_low: 101
+      aqi_high: 200
+    - concentration_low: 91
+      concentration_high: 120
+      aqi_low: 201
+      aqi_high: 300
+    - concentration_low: 121
+      concentration_high: 250
+      aqi_low: 301
+      aqi_high: 400
+    - concentration_low: 250
+      concentration_high: 350
+      aqi_low: 401
+      aqi_high: 500
+  categories:
+    - { name: "GOOD", aqi_min: 0, aqi_max: 50 }
+    - { name: "SATISFACTORY", aqi_min: 51, aqi_max: 100 }
+    - { name: "MODERATELY_POLLUTED", aqi_min: 101, aqi_max: 200 }
+    - { name: "POOR", aqi_min: 201, aqi_max: 300 }
+    - { name: "VERY_POOR", aqi_min: 301, aqi_max: 400 }
+    - { name: "SEVERE", aqi_min: 401, aqi_max: 500 }
+  default_date: "2025-01-01"
+  nodata: -9999
+
+hotspot:
+  enabled: true
+  # High-pollution zone detection (threshold based, NOT statistical hotspot
+  # analysis). Statistical hotspot analysis is deferred.
+  method: "aqi_category"
+  minimum_category: "VERY_POOR"
+
+uncertainty:
+  enabled: false
+  method: "none"
+
+api:
+  host: "127.0.0.1"
+  port: 8000
+  cors_origins:
+    - "http://localhost:5173"
+    - "http://localhost:3000"
+    - "http://127.0.0.1:5173"
+  default_resolution: "500m"
+
+training_data:
+  enabled: true
+  target: "PM2.5"
+  random_seed: 42
+  cv:
+    strategy: "leave_one_group_out"
+    group_by: "station_id"
+    fallback_feature_set: "non_aod"
+  output_dir: "data/processed"
+
+alignment:
+  enabled: true
+  analysis_crs: "EPSG:32643"
+  coarse_grid_resolution_m: 1000
+  target_grid_resolution_m: 500
+  temporal_resolution: "daily"
+  temporal_tolerance_days:
+    ndvi: 16
+    viirs: 3
+  visualization: true
+  output_dir: "data/processed"
+
+download:
+  enabled: false
+
+# ---------------------------------------------------------------------------
+# GLOBALIZATION LAYER (Milestone 15+)
+# AOI is now fully configurable. The legacy `study_area` block above remains
+# the source of truth for the locked Delhi prototype pipeline (run.py).
+# Supported AOI modes: named_region | bbox | geojson | global
+# ---------------------------------------------------------------------------
+aoi:
+  mode: "named_region"
+  named_region:
+    name: "Delhi"
+    description: "Delhi prototype study area (Milestones 1-14)"
+  bbox:
+    min_lon: 77.0
+    min_lat: 28.4
+    max_lon: 77.4
+    max_lat: 28.8
+  geometry_file: "data/raw/aoi.geojson"
+  global:
+    enabled: true
+    min_lon: -180.0
+    min_lat: -90.0
+    max_lon: 180.0
+    max_lat: 90.0
+  # Named region catalog exposed via the dashboard AOI selector.
+  # Every region carries an explicit AQI scheme - schemes are never mixed.
+  regions:
+    delhi:
+      mode: "geometry_file"
+      name: "Delhi"
+      geometry_file: "data/raw/aoi.geojson"
+      aqi_scheme: "india_cpcb"
+    india:
+      mode: "bbox"
+      name: "India"
+      bbox:
+        min_lon: 65.0
+        min_lat: 5.0
+        max_lon: 100.0
+        max_lat: 40.0
+      aqi_scheme: "india_cpcb"
+    global:
+      mode: "global"
+      name: "Global"
+      aqi_scheme: "none"
+
+tiles:
+  enabled: true
+  # Tile size in degrees used for global tile-based processing. Global rasters
+  # are NEVER allocated as one in-memory grid; each tile is processed and
+  # validated independently, then merged.
+  size_deg: 10
+  overlap_deg: 0
+  cache_dir: "data/cache"
+
+cache:
+  enabled: true
+  dir: "data/cache"
+
+ground_truth:
+  enabled: true
+  output_file: "data/processed/ground_pm25.parquet"
+  sources:
+    cpcb:
+      enabled: true
+      input_file: "data/raw/cpcb/cpcb_pm25.csv"
+      country: "India"
+      network: "CPCB"
+      units: "ug/m3"
+      quality_flag: "cpcb_reported"
+    openaq:
+      enabled: false
+      input_file: null
+      country: null
+      network: "OpenAQ"
+      units: "ug/m3"
+      quality_flag: "openaq_reported"
+
+aqi_scheme:
+  # AQI standard is explicit and never silently mixed.
+  # india_cpcb reuses the locked `aqi.breakpoints` table (source of truth).
+  default: "india_cpcb"
+  options:
+    india_cpcb:
+      label: "CPCB PM2.5-derived"
+      method: "CPCB_NATIONAL_AQI"
+      pollutant: "PM2.5"
+      averaging_period: "24h"
+      breakpoints_source: "config.aqi.breakpoints"
+    us_epa:
+      label: "US EPA"
+      method: "US_EPA_PM25_AQI"
+      pollutant: "PM2.5"
+      averaging_period: "24h"
+      breakpoints:
+        - { concentration_low: 0.0, concentration_high: 9.0, aqi_low: 0, aqi_high: 50 }
+        - { concentration_low: 9.1, concentration_high: 35.4, aqi_low: 51, aqi_high: 100 }
+        - { concentration_low: 35.5, concentration_high: 55.4, aqi_low: 101, aqi_high: 150 }
+        - { concentration_low: 55.5, concentration_high: 125.4, aqi_low: 151, aqi_high: 200 }
+        - { concentration_low: 125.5, concentration_high: 225.4, aqi_low: 201, aqi_high: 300 }
+        - { concentration_low: 225.5, concentration_high: 325.4, aqi_low: 301, aqi_high: 400 }
+        - { concentration_low: 325.5, concentration_high: 500.4, aqi_low: 401, aqi_high: 500 }
+    none:
+      label: "Concentration only"
+      method: "CONCENTRATION_ONLY"
+      enabled: false
+
+model_scopes:
+  # Model scope is explicit. The Delhi model is a prototype_local scope and is
+  # NEVER labeled global. Global/regional scopes stay unavailable until a model
+  # is actually trained and spatially validated on that scope's observations.
+  default_scope: "prototype_local"
+  scopes:
+    prototype_local:
+      label: "Delhi Prototype"
+      training_region: "Delhi"
+      model_file: "models/xgboost_pm25.json"
+      rf_model_file: "models/random_forest_pm25.joblib"
+    regional:
+      label: "Regional"
+      status: "unavailable"
+      reason: "No regionally trained and spatially validated model exists."
+    global:
+      label: "Global"
+      status: "unavailable"
+      reason: "Global PM2.5 prediction unavailable - validated global model/data not configured."
+
+# ---------------------------------------------------------------------------
+# GLOBAL DATA ACQUISITION LAYER (Milestone 16)
+# Data engineering ONLY. No ML training, no global prediction, no AQI/hotspot
+# rasters. Real datasets are acquired ONLY when their credentials are present
+# in the environment (env vars only - never config.yaml, never logged). Missing
+# credentials produce a graceful UNAVAILABLE status, never fabricated data and
+# never silent substitution of Delhi data as global.
+# ---------------------------------------------------------------------------
+global_data:
+  enabled: true
+  # Default acquisition scope for `python run.py --global-data-only`.
+  # Supported: global | india | delhi. Artifact scope must equal requested scope.
+  scope: "global"
+  common_grid:
+    # 1 km framework is acquired per tile; 500 m is the target framework that a
+    # future stage may build. A full global 500 m map is NEVER materialized.
+    coarse_resolution_m: 1000
+    target_resolution_m: 500
+  temporal:
+    aggregation: "daily_mean"
+    min_observations_per_day: 1
+  qc:
+    outlier_method: "mad"
+    outlier_threshold_k: 5.0
+    max_pm25_ug_m3: 1000
+  pm25:
+    source: "openaq"
+    api_version: "v3"
+    base_url: "https://api.openaq.org/v3"
+    # OpenAQ v3 requires an API key (v2 is retired). Key comes from env only.
+    credential_env_var: "OPENAQ_API_KEY"
+    timezone: "UTC"
+    request_timeout_s: 30
+  fetch:
+    retries: 3
+    backoff_base_s: 2.0
+    backoff_max_s: 60.0
+    # Max tiles attempted per satellite source per run. 0 = unlimited. A small
+    # cap keeps acceptance runs bounded; raise it for full acquisition.
+    max_tiles: 3
+  cache:
+    dir: "data/cache/global"
+    version: "v1"
+    validate_before_redownload: true
+  storage:
+    raw_base: "data/raw/global"
+    processed_base: "data/processed/global"
+  sources:
+    aod:
+      enabled: true
+      product: "MODIS_MAIAC_MCD19A2"
+      credential_env_var: "EARTHDATA_USERNAME"
+      credential_env_var_2: "EARTHDATA_PASSWORD"
+      endpoint: "https://ladsweb.modaps.eosdis.nasa.gov/api/v2/content/details"
+    weather:
+      enabled: true
+      product: "ERA5-Land"
+      credential_env_var: "CDSAPI_URL"
+      credential_env_var_2: "CDSAPI_KEY"
+    ndvi:
+      enabled: true
+      product: "MODIS_Terra_MOD13Q1_v6.1"
+      credential_env_var: "EARTHDATA_USERNAME"
+      credential_env_var_2: "EARTHDATA_PASSWORD"
+      temporal:
+        composite_period_days: 16
+        no_future_match: true
+    dem:
+      enabled: true
+      product: "NASA_SRTM_GL1_v003"
+      credential_env_var: "EARTHDATA_USERNAME"
+      credential_env_var_2: "EARTHDATA_PASSWORD"
+    osm:
+      enabled: true
+      source: "OpenStreetMap"
+      endpoint: "https://overpass-api.de/api/interpreter"
+    viirs:
+      enabled: true
+      product: "NASA_VIIRS_VNP46A2_v2.0"
+      credential_env_var: "EARTHDATA_USERNAME"
+      credential_env_var_2: "EARTHDATA_PASSWORD"

@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.ipynb_checkpoints/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# Data (large files)
+data/raw/**
+data/processed/**
+data/outputs/**
+!data/raw/**/.gitkeep
+!data/processed/**/.gitkeep
+!data/outputs/**/.gitkeep
+!data/raw/aoi.geojson
+
+# Models / artifacts
+models/
+logs/
+
+# Node / dashboard
+node_modules/
+dashboard/node_modules/
+dashboard/dist/
+dashboard/build/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
