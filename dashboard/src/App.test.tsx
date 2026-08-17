@@ -313,6 +313,17 @@ function installDefaultMocks() {
 describe("App dashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(raster.loadRasterLayer).mockResolvedValue({
+      canvas: document.createElement("canvas"),
+      coordinates: [
+        [77.0, 28.8],
+        [77.4, 28.8],
+        [77.4, 28.4],
+        [77.0, 28.4],
+      ],
+      bounds: { west: 77.0, south: 28.4, east: 77.4, north: 28.8 },
+      valueRange: { min: 100, max: 143 },
+    });
     installDefaultMocks();
   });
 
@@ -494,7 +505,7 @@ describe("App dashboard", () => {
       expect(screen.getByText("Selected station")).toBeInTheDocument();
     });
     expect(screen.getAllByText("ST_01").length).toBeGreaterThan(0);
-    expect(mockedApi.getStationDetail).toHaveBeenCalledWith("ST_01");
+    expect(mockedApi.getStationDetail).toHaveBeenCalledWith("ST_01", undefined);
   });
 
   it("renders human-readable feature importance labels", async () => {
@@ -525,7 +536,7 @@ describe("App dashboard", () => {
   it("propagates the selected date to the hotspots request", async () => {
     render(<App />);
     await waitFor(() => {
-      expect(mockedApi.getHotspots).toHaveBeenCalledWith("2025-01-01");
+      expect(mockedApi.getHotspots).toHaveBeenCalledWith("2025-01-01", undefined);
     });
   });
 
@@ -593,6 +604,7 @@ describe("App dashboard", () => {
       hotspots: { available: false, reason: "No model", definition: "predicted high-pollution zone" },
       note: "",
     });
+    vi.mocked(raster.loadRasterLayer).mockRejectedValue(new Error("no raster for global"));
     render(<App />);
     const select = await screen.findByLabelText("Selected region");
     fireEvent.change(select, { target: { value: "global" } });
@@ -658,6 +670,7 @@ describe("App dashboard", () => {
       overall: "available",
       notes: [],
     });
+    vi.mocked(raster.loadRasterLayer).mockRejectedValue(new Error("no raster for india"));
     render(<App />);
     const select = await screen.findByLabelText("Selected region");
     fireEvent.change(select, { target: { value: "india" } });

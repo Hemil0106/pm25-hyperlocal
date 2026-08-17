@@ -79,7 +79,14 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): num
 
 /** Map an M15 region id to the M16 acquisition scope (global | india | delhi). */
 function scopeForRegion(region: string): string {
-  return region === "india" || region === "global" ? region : "delhi";
+  if (region === "india" || region === "global") return region;
+  return "delhi";
+}
+
+/** Map region id to the backend city param (None for delhi, which is the default). */
+function cityParam(region: string): string | undefined {
+  if (region === "delhi") return undefined;
+  return region;
 }
 
 export default function App() {
@@ -136,7 +143,7 @@ export default function App() {
         if (cancelled) return;
       }
       try {
-        const { dates: found } = await getAvailableDates();
+        const { dates: found } = await getAvailableDates(cityParam(selectedRegion));
         if (cancelled) return;
         setDates(found);
         if (found.length > 0) setSelectedDate(found[0]);
@@ -148,7 +155,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedRegion]);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,11 +211,12 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const city = cityParam(selectedRegion);
       const [meta, stationList, importance, uncertaintyData] = await Promise.allSettled([
-        getMetadata(),
-        getStations(),
-        getFeatureImportance(),
-        getUncertainty(),
+        getMetadata(city),
+        getStations(city),
+        getFeatureImportance(city),
+        getUncertainty(city),
       ]);
       if (cancelled) return;
       if (meta.status === "fulfilled") setMetadata(meta.value);
@@ -219,15 +227,16 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedRegion]);
 
   useEffect(() => {
     if (!selectedDate) return;
     let cancelled = false;
     (async () => {
+      const city = cityParam(selectedRegion);
       const [hotspotData, statsData] = await Promise.allSettled([
-        getHotspots(selectedDate),
-        getHotspotStatistics(),
+        getHotspots(selectedDate, city),
+        getHotspotStatistics(city),
       ]);
       if (cancelled) return;
       if (hotspotData.status === "fulfilled") setHotspots(hotspotData.value);
@@ -236,7 +245,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [selectedDate]);
+  }, [selectedDate, selectedRegion]);
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -244,10 +253,11 @@ export default function App() {
     setRasterError(null);
     setRasters({ pm25: null, pm25_1km: null, aqi: null });
     (async () => {
+      const city = cityParam(selectedRegion);
       const [pm25Result, pm25_1kmResult, aqiResult] = await Promise.allSettled([
-        loadRasterLayer(getPM25RasterUrl(selectedDate, "500m"), "pm25"),
-        loadRasterLayer(getPM25RasterUrl(selectedDate, "1000m"), "pm25"),
-        loadRasterLayer(getAQIRasterUrl(selectedDate), "aqi"),
+        loadRasterLayer(getPM25RasterUrl(selectedDate, "500m", city), "pm25"),
+        loadRasterLayer(getPM25RasterUrl(selectedDate, "1000m", city), "pm25"),
+        loadRasterLayer(getAQIRasterUrl(selectedDate, city), "aqi"),
       ]);
       if (cancelled) return;
       setRasters({
@@ -266,7 +276,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [selectedDate]);
+  }, [selectedDate, selectedRegion]);
 
   async function handleMapClick(latitude: number, longitude: number) {
     if (!selectedDate) return;
@@ -277,7 +287,7 @@ export default function App() {
     setSelectedStation(null);
     setStationDetail(null);
     try {
-      const result = await getLocation(selectedDate, latitude, longitude);
+      const result = await getLocation(selectedDate, latitude, longitude, cityParam(selectedRegion));
       setLocation(result);
     } catch (error) {
       setLocation(null);
@@ -301,7 +311,7 @@ export default function App() {
     setLocation(null);
     setSelectedHotspot(null);
     try {
-      const detail = await getStationDetail(station.station_id);
+      const detail = await getStationDetail(station.station_id, cityParam(selectedRegion));
       setStationDetail(detail);
     } catch {
       setStationDetail(null);
@@ -333,6 +343,8 @@ export default function App() {
 
   function handleRegionChange(region: string) {
     setSelectedRegion(region);
+    setSelectedDate("");
+    setDates([]);
     setSelectedLocation(null);
     setLocation(null);
     setLocationError(null);
@@ -340,6 +352,12 @@ export default function App() {
     setSelectedStation(null);
     setStationDetail(null);
     setRasters({ pm25: null, pm25_1km: null, aqi: null });
+    setMetadata(null);
+    setStations(null);
+    setFeatureImportance(null);
+    setUncertainty(null);
+    setStatistics(null);
+    setHotspots(null);
   }
 
   const nearbyStation: Station | null = (() => {
@@ -370,6 +388,7 @@ export default function App() {
     : null;
   const model = metadataPm25?.model ?? null;
   const canPredict = outputMetadata?.inference?.can_predict ?? true;
+  const hasRasterData = rasters.pm25 !== null || rasters.pm25_1km !== null || rasters.aqi !== null;
   const regionScopeStatus = aoiInfo?.model_scope?.status === "available" ? "available" : "unavailable";
   const regionBounds =
     aoiInfo?.bounds ??
@@ -406,7 +425,7 @@ export default function App() {
         model={model ?? "XGBoost"}
       />
 
-      {!canPredict && outputMetadata !== null && (
+      {!canPredict && !hasRasterData && outputMetadata !== null && (
         <div className="api-banner" role="alert">
           Prediction unavailable for the {outputMetadata.aoi.name} AOI — no validated
           model trained on observations for this scope exists. The Delhi prototype is
@@ -436,7 +455,7 @@ export default function App() {
               onHotspotClick={handleHotspotClick}
               onStationClick={handleStationClick}
             />
-            {nonDelhiRegion && !canPredict && (
+            {nonDelhiRegion && !canPredict && !hasRasterData && (
               <div className="map-error">
                 <ErrorBox>
                   Global PM2.5 map unavailable for the {regions?.[selectedRegion]?.name ?? selectedRegion}{" "}

@@ -1,0 +1,7 @@
+feature,random_forest_importance,xgboost_gain
+elevation_m,0.25,0.22
+road_density,0.2,0.18
+night_lights,0.18,0.2
+NDVI,0.15,0.16
+temperature,0.12,0.14
+humidity,0.1,0.1

@@ -55,47 +55,75 @@ async function request<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+function cityQs(city?: string): string {
+  return city ? `city=${encodeURIComponent(city)}` : "";
+}
+
 export function getApiBaseUrl(): string {
   return API_BASE_URL;
 }
 
 export const getHealth = () => request<HealthResponse>("/health");
-export const getAvailableDates = () => request<DateResponse>("/available-dates");
-export const getMetadata = () => request<Record<string, unknown>>("/metadata");
 
-export const getPM25 = (date: string, lat: number, lon: number, resolution = "500m") =>
-  request<PM25Response>(`/pm25?date=${date}&lat=${lat}&lon=${lon}&resolution=${resolution}`);
+export const getAvailableDates = (city?: string) =>
+  request<DateResponse>(`/available-dates${cityQs(city) ? `?${cityQs(city)}` : ""}`);
 
-export const getAQI = (date: string, lat: number, lon: number) =>
-  request<AQIResponse>(`/aqi?date=${date}&lat=${lat}&lon=${lon}`);
+export const getMetadata = (city?: string) =>
+  request<Record<string, unknown>>(`/metadata${cityQs(city) ? `?${cityQs(city)}` : ""}`);
 
-export const getLocation = (date: string, lat: number, lon: number) =>
-  request<LocationResponse>(`/location?date=${date}&lat=${lat}&lon=${lon}`);
+export const getPM25 = (date: string, lat: number, lon: number, resolution = "500m", city?: string) => {
+  const params = `date=${date}&lat=${lat}&lon=${lon}&resolution=${resolution}${city ? `&city=${encodeURIComponent(city)}` : ""}`;
+  return request<PM25Response>(`/pm25?${params}`);
+};
 
-export const getHotspots = (date?: string) =>
-  request<HotspotCollection>(`/hotspots${date ? `?date=${date}` : ""}`);
+export const getAQI = (date: string, lat: number, lon: number, city?: string) => {
+  const params = `date=${date}&lat=${lat}&lon=${lon}${city ? `&city=${encodeURIComponent(city)}` : ""}`;
+  return request<AQIResponse>(`/aqi?${params}`);
+};
 
-export const getHotspotStatistics = () =>
-  request<HotspotStatisticsResponse>("/hotspots/statistics");
+export const getLocation = (date: string, lat: number, lon: number, city?: string) => {
+  const params = `date=${date}&lat=${lat}&lon=${lon}${city ? `&city=${encodeURIComponent(city)}` : ""}`;
+  return request<LocationResponse>(`/location?${params}`);
+};
 
-export const getStations = () => request<Station[]>("/stations");
+export const getHotspots = (date?: string, city?: string) => {
+  const params: string[] = [];
+  if (date) params.push(`date=${date}`);
+  if (city) params.push(`city=${encodeURIComponent(city)}`);
+  return request<HotspotCollection>(`/hotspots${params.length ? `?${params.join("&")}` : ""}`);
+};
 
-export const getStationDetail = (stationId: string) =>
-  request<StationDetail>(`/stations/${stationId}`);
+export const getHotspotStatistics = (city?: string) =>
+  request<HotspotStatisticsResponse>(`/hotspots/statistics${cityQs(city) ? `?${cityQs(city)}` : ""}`);
 
-export const getFeatureImportance = () =>
-  request<FeatureImportanceResponse>("/feature-importance");
+export const getStations = (city?: string) =>
+  request<Station[]>(`/stations${cityQs(city) ? `?${cityQs(city)}` : ""}`);
 
-export const getUncertainty = () => request<UncertaintyResponse>("/uncertainty");
+export const getStationDetail = (stationId: string, city?: string) => {
+  const params = city ? `?city=${encodeURIComponent(city)}` : "";
+  return request<StationDetail>(`/stations/${stationId}${params}`);
+};
 
-export const getPM25Grid = (date: string, resolution = "500m") =>
-  request<GridResponse>(`/pm25/grid?date=${date}&resolution=${resolution}`);
+export const getFeatureImportance = (city?: string) =>
+  request<FeatureImportanceResponse>(`/feature-importance${cityQs(city) ? `?${cityQs(city)}` : ""}`);
 
-export const getPM25RasterUrl = (date: string, resolution = "500m") =>
-  `${API_BASE_URL}/raster/pm25?date=${date}&resolution=${resolution}`;
+export const getUncertainty = (city?: string) =>
+  request<UncertaintyResponse>(`/uncertainty${cityQs(city) ? `?${cityQs(city)}` : ""}`);
 
-export const getAQIRasterUrl = (date: string) =>
-  `${API_BASE_URL}/raster/aqi?date=${date}`;
+export const getPM25Grid = (date: string, resolution = "500m", city?: string) => {
+  const params = `date=${date}&resolution=${resolution}${city ? `&city=${encodeURIComponent(city)}` : ""}`;
+  return request<GridResponse>(`/pm25/grid?${params}`);
+};
+
+export const getPM25RasterUrl = (date: string, resolution = "500m", city?: string) => {
+  const params = `date=${date}&resolution=${resolution}${city ? `&city=${encodeURIComponent(city)}` : ""}`;
+  return `${API_BASE_URL}/raster/pm25?${params}`;
+};
+
+export const getAQIRasterUrl = (date: string, city?: string) => {
+  const params = `date=${date}${city ? `&city=${encodeURIComponent(city)}` : ""}`;
+  return `${API_BASE_URL}/raster/aqi?${params}`;
+};
 
 export const getRegions = () => request<RegionCatalogResponse>("/global/regions");
 

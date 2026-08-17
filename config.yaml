@@ -306,6 +306,24 @@ aoi:
         max_lon: 100.0
         max_lat: 40.0
       aqi_scheme: "india_cpcb"
+    pune:
+      mode: "bbox"
+      name: "Pune"
+      bbox:
+        min_lon: 73.7
+        min_lat: 18.4
+        max_lon: 74.1
+        max_lat: 18.7
+      aqi_scheme: "india_cpcb"
+    mumbai:
+      mode: "bbox"
+      name: "Mumbai"
+      bbox:
+        min_lon: 72.7
+        min_lat: 18.8
+        max_lon: 73.0
+        max_lat: 19.3
+      aqi_scheme: "india_cpcb"
     global:
       mode: "global"
       name: "Global"
