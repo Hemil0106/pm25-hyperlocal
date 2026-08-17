@@ -539,6 +539,11 @@ body {
   background: linear-gradient(180deg, var(--warn-bg) 0%, var(--surface) 70%);
 }
 
+.panel-info {
+  border-color: var(--accent-line);
+  background: linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 70%);
+}
+
 .panel-header {
   display: flex;
   justify-content: space-between;

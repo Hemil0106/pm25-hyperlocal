@@ -232,6 +232,7 @@ export interface OutputMetadataResponse {
     scope_status: string;
     reason: string;
     resolution_500m_output_exists: boolean;
+    has_raster_data: boolean;
   };
   downscaling: { available: boolean; reason: string; caveats: string[] };
   hotspots: { available: boolean; reason: string; definition: string };

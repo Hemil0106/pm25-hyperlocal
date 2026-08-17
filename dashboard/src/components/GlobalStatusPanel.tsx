@@ -15,6 +15,7 @@ interface GlobalStatusPanelProps {
   loading: boolean;
   globalDataStatus: GlobalDataStatusResponse | null;
   globalDataLoading: boolean;
+  hasRasterData?: boolean;
 }
 
 export function GlobalStatusPanel({
@@ -25,8 +26,10 @@ export function GlobalStatusPanel({
   loading,
   globalDataStatus,
   globalDataLoading,
+  hasRasterData = false,
 }: GlobalStatusPanelProps) {
   const canPredict = outputMetadata?.inference?.can_predict ?? false;
+  const rasterAvailable = hasRasterData || (outputMetadata?.inference?.has_raster_data ?? false);
   const scopeStatus =
     aoi?.model_scope?.status === "available"
       ? "available"
@@ -94,7 +97,7 @@ export function GlobalStatusPanel({
             <div>
               <span className="loc-label">Prediction</span>
               <span className="loc-value">
-                {canPredict ? "Available" : "Unavailable"}
+                {canPredict ? "Available" : rasterAvailable ? "Raster data available" : "Unavailable"}
               </span>
             </div>
           </div>
@@ -110,7 +113,21 @@ export function GlobalStatusPanel({
         </Panel>
       )}
 
-      {!loading && !canPredict && (
+      {!loading && !canPredict && rasterAvailable && (
+        <Panel title="Raster data loaded" className="panel-info">
+          <p className="body-text">
+            Pre-generated PM2.5 and AQI raster maps are available for this AOI.
+            No trained model exists for this region — the Delhi prototype model is
+            never applied outside Delhi — but historical raster data has been
+            generated and is displayed on the map.
+          </p>
+          {availability && availability.notes.length > 0 && (
+            <p className="body-text muted">{availability.notes[0]}</p>
+          )}
+        </Panel>
+      )}
+
+      {!loading && !canPredict && !rasterAvailable && (
         <Panel title="Why is prediction unavailable?" className="panel-warning">
           <p className="body-text">
             No validated model trained on observations covering this AOI exists.

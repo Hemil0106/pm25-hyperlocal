@@ -176,6 +176,17 @@ def get_output_metadata(date: date = Query(None),
     downscaling = downscaling_plan(config, aoi, date=str(date) if date else None)
     hotspots = hotspot_plan(config, aoi, date=str(date) if date else None)
 
+    has_raster = False
+    if date:
+        from api.main import _data_dir, PM25_500M_PATTERN, PM25_1KM_PATTERN, AQI_500M_PATTERN
+        city = region if region and region != "delhi" else None
+        d = _data_dir(city)
+        has_raster = (
+            (d / PM25_500M_PATTERN.format(date=date)).exists()
+            or (d / PM25_1KM_PATTERN.format(date=date)).exists()
+            or (d / AQI_500M_PATTERN.format(date=date)).exists()
+        )
+
     return {
         "aoi": {"name": aoi.name, "mode": aoi.mode},
         "date": str(date) if date else None,
@@ -184,6 +195,7 @@ def get_output_metadata(date: date = Query(None),
             "scope_status": inference["scope_status"],
             "reason": inference["reason"],
             "resolution_500m_output_exists": inference["resolution"]["500m"] == "True",
+            "has_raster_data": has_raster,
         },
         "downscaling": {"available": downscaling["can_downscale"],
                         "reason": downscaling["reason"],

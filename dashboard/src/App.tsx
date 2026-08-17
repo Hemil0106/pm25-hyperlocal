@@ -571,6 +571,7 @@ export default function App() {
             loading={globalStatusLoading}
             globalDataStatus={globalDataStatus}
             globalDataLoading={globalDataLoading}
+            hasRasterData={hasRasterData}
           />
           <ModelInfoPanel
             metadata={metadata}
