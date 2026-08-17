@@ -1,0 +1,108 @@
+{
+  "scope": "global",
+  "rows": 0,
+  "stations": 0,
+  "countries": 0,
+  "complete_case_rows": 0,
+  "missingness_by_feature": [
+    {
+      "column": "PM2.5",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "AOD",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "temperature_c",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "relative_humidity_pct",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "wind_speed_mps",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "wind_direction_deg",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "NDVI",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "elevation_m",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "road_density",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "night_lights",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "wind_u_mps",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "wind_v_mps",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "month",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "day_of_year",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "sin_day_of_year",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    },
+    {
+      "column": "cos_day_of_year",
+      "n_non_null": 0,
+      "n_null": 0,
+      "pct_missing": 1.0
+    }
+  ],
+  "by_month": [],
+  "geographic_bias": [],
+  "note": "Complete-case rows are preserved alongside the incomplete diagnostic file; nothing is silently deleted."
+}

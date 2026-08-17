@@ -1,0 +1,138 @@
+{
+  "manifest_version": 1,
+  "date": "2025-01-01",
+  "aoi": {
+    "name": "Global",
+    "mode": "global",
+    "bounds": {
+      "west": -180.0,
+      "south": -90.0,
+      "east": 180.0,
+      "north": 90.0
+    }
+  },
+  "ground_truth": {
+    "n_rows_total": 246,
+    "n_stations_total": 5,
+    "n_rows_in_aoi": 246,
+    "n_stations_in_aoi": 5,
+    "sources": [
+      "cpcb"
+    ],
+    "countries": [
+      "India"
+    ]
+  },
+  "model_scopes": {
+    "prototype_local": {
+      "label": "Delhi Prototype",
+      "status": "available",
+      "reason": ""
+    },
+    "regional": {
+      "label": "Regional",
+      "status": "unavailable",
+      "reason": "No regionally trained and spatially validated model exists."
+    },
+    "global": {
+      "label": "Global",
+      "status": "unavailable",
+      "reason": "Global PM2.5 prediction unavailable - validated global model/data not configured."
+    }
+  },
+  "datasets": {
+    "aod": {
+      "id": "aod",
+      "name": "MODIS MAIAC AOD (MCD19A2)",
+      "type": "gridded",
+      "coverage": "global (1 km)",
+      "enabled": true,
+      "local_data_present": false,
+      "local_path": null
+    },
+    "cpcb": {
+      "id": "cpcb",
+      "name": "CPCB PM2.5 ground observations",
+      "type": "point",
+      "coverage": "India (CPCB network)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/cpcb/cpcb_pm25.csv"
+    },
+    "weather": {
+      "id": "weather",
+      "name": "ERA5-Land meteorology",
+      "type": "gridded",
+      "coverage": "global (ERA5-Land)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/weather/era5_land.nc"
+    },
+    "ndvi": {
+      "id": "ndvi",
+      "name": "MODIS Terra NDVI (MOD13Q1)",
+      "type": "gridded",
+      "coverage": "global (250 m)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/ndvi/ndvi_input.tif"
+    },
+    "osm": {
+      "id": "osm",
+      "name": "OpenStreetMap roads",
+      "type": "vector",
+      "coverage": "global (OpenStreetMap)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/osm/osm_roads.geojson"
+    },
+    "dem": {
+      "id": "dem",
+      "name": "NASA SRTM elevation (GL1)",
+      "type": "gridded",
+      "coverage": "global (SRTM v003)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/dem"
+    },
+    "viirs": {
+      "id": "viirs",
+      "name": "NASA VIIRS night lights (VNP46A2)",
+      "type": "gridded",
+      "coverage": "global (VNP46A2)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/viirs/viirs_input.tif"
+    },
+    "ground_truth": {
+      "id": "ground_truth",
+      "name": "Normalized ground-truth PM2.5",
+      "type": "point",
+      "coverage": "derived from configured sources",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/processed/ground_pm25.parquet",
+      "output_file": "data/processed/ground_pm25.parquet",
+      "sources": {
+        "cpcb": {
+          "enabled": true,
+          "network": "CPCB",
+          "country": "India",
+          "units": "ug/m3",
+          "local_data_present": true
+        },
+        "openaq": {
+          "enabled": false,
+          "network": "OpenAQ",
+          "country": null,
+          "units": "ug/m3",
+          "local_data_present": false
+        }
+      }
+    }
+  },
+  "overall": "data_limited",
+  "notes": [
+    "Global ground-truth PM2.5 is not configured (OpenAQ disabled). No scientifically valid global model exists; global scope is unavailable."
+  ]
+}

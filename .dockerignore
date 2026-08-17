@@ -1,0 +1,14 @@
+.venv/
+node_modules/
+dashboard/node_modules/
+dashboard/dist/
+dashboard/build/
+.git/
+.netlify/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/raw/
+models/
+logs/
+*.log

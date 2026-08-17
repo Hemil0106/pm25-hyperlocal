@@ -1,0 +1,84 @@
+{
+    "stage": "spatial_downscaling_500m",
+    "status": "PASSED",
+    "date": "2025-01-01",
+    "parent_resolution_m": 1000,
+    "target_resolution_m": 500,
+    "total_500m_cells": 7094,
+    "valid_500m_cells": 3264,
+    "NoData_cells": 3830,
+    "coverage_percent": 46.01,
+    "parent_1km_valid_coverage": 45.23,
+    "downscaling_method": "baseline_prototype",
+    "residual_model_used": false,
+    "residual_model_reason": "INSUFFICIENT_TRAINING_DATA",
+    "residual_training_rows": 16,
+    "station_count": 4,
+    "dataset_mode": "fallback",
+    "AOD_used": false,
+    "residual_cv": null,
+    "consistency_statistics": {
+        "n_parents_compared": 816,
+        "mean_abs_diff_ug_m3": 0.0,
+        "max_abs_diff_ug_m3": 0.0,
+        "mean_rel_diff_percent": 0.0,
+        "n_parents_with_abs_diff_gt_1": 0,
+        "method": "area-weighted mean of 500 m child PM2.5 aggregated to parent 1 km"
+    },
+    "consistency_constraint": {
+        "applied": true,
+        "formula": "child_adjusted = child_raw + (parent_coarse_mean - area_weighted_mean(child_raw)) per parent; enforces parent coarse mean preservation, does NOT claim accuracy gain"
+    },
+    "mean_absolute_parent_difference": 0.0,
+    "max_parent_difference": 0.0,
+    "raw_negative_count": 0,
+    "final_negative_count": 0,
+    "prediction_min_ug_m3": 109.531,
+    "prediction_max_ug_m3": 143.293,
+    "prediction_mean_ug_m3": 124.78,
+    "prediction_status_counts": {
+        "missing_parent": 3830,
+        "baseline_prototype": 3264
+    },
+    "predictor_resolutions": {
+        "NDVI": {
+            "source_crs": "EPSG:4326",
+            "source_resolution_m": [
+                0.0,
+                0.0
+            ],
+            "source_note": [
+                "raster stored in EPSG:4326 degrees; processed at native resolution, zonal mean aggregated to 500 m cells in EPSG:32643"
+            ]
+        },
+        "elevation_m": {
+            "source_crs": "EPSG:4326",
+            "source_resolution_m": [
+                0.0,
+                0.0
+            ],
+            "source_note": [
+                "raster stored in EPSG:4326 degrees; processed at native resolution, zonal mean aggregated to 500 m cells in EPSG:32643"
+            ]
+        },
+        "night_lights": {
+            "source_crs": "EPSG:4326",
+            "source_resolution_m": [
+                0.0,
+                0.0
+            ],
+            "source_note": [
+                "raster stored in EPSG:4326 degrees; processed at native resolution, zonal mean aggregated to 500 m cells in EPSG:32643"
+            ]
+        }
+    },
+    "prediction_policy": "no CPCB observed PM2.5 used as a 500 m predictor; missing parent -> NoData; missing 500 m feature -> NoData (residual path)",
+    "outputs": {
+        "prediction_table": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\pm25_500m_predictions.parquet",
+        "feature_table": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\downscaling_features_500m.parquet",
+        "raster": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\pm25_500m_2025-01-01.tif",
+        "visualization": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\outputs\\pm25_500m_2025-01-01.png"
+    },
+    "processing_timestamp": "2026-08-14 23:07:44.076020",
+    "scientific_warning": "Residual downscaling model NOT scientifically trainable with current sample size. 500 m values in this run are a parent-constant BASELINE PROTOTYPE for pipeline demonstration only; they do not yet exploit high-resolution predictors. This is NOT a validated ML downscaling model and does NOT imply higher accuracy."
+}

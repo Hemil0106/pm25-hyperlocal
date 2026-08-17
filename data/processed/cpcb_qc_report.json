@@ -1,0 +1,14 @@
+{
+    "input_rows": 249,
+    "duplicate_rows": 1,
+    "missing_timestamps": 0,
+    "missing_station_ids": 0,
+    "missing_coordinates": 0,
+    "invalid_coordinates": 1,
+    "impossible_coordinates": 0,
+    "missing_pm25": 1,
+    "non_finite_values": 0,
+    "negative_pm25": 1,
+    "invalid_pm25": 0,
+    "final_valid_rows": 245
+}

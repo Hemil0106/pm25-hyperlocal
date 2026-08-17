@@ -1,0 +1,47 @@
+{
+    "input_file": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\raw\\ndvi\\ndvi_input.tif",
+    "output_file": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\ndvi.tif",
+    "product": "MODIS_Terra_MOD13Q1_v6.1",
+    "source": "NASA_Earthdata_LP_DAAC",
+    "composite_start_date": "2025-01-01",
+    "composite_period_days": 16,
+    "temporal_resolution": "16-day composite",
+    "crs": "EPSG:4326",
+    "resolution": [
+        0.0025,
+        0.0025
+    ],
+    "raster_dimensions": [
+        160,
+        160
+    ],
+    "aoi_coverage": {
+        "latitude_range": [
+            28.4,
+            28.8
+        ],
+        "longitude_range": [
+            77.0,
+            77.4
+        ]
+    },
+    "scale_factor": 0.0001,
+    "quality_filter_policy": "MOD13Q1 pixel-reliability band: keep codes [0, 1] (0=good, 1=marginal); reject fill(-1), snow/ice(2), cloudy(3); fill value and out-of-range scaled values removed before scaling.",
+    "processing_status": "COMPLETED",
+    "statistics": {
+        "total_pixels": 25600,
+        "qa_filtering": {
+            "reliability_-1_fill / not produced": 291,
+            "reliability_0_good data": 24045,
+            "reliability_1_marginal data": 526,
+            "reliability_3_cloudy": 738
+        },
+        "invalid_pixels": 1050,
+        "invalid_out_of_physical_range": 0,
+        "valid_pixels": 24550,
+        "nodata_pixels": 1050,
+        "min_valid_ndvi": 0.0723,
+        "max_valid_ndvi": 0.6612,
+        "mean_valid_ndvi": 0.35803142158859474
+    }
+}

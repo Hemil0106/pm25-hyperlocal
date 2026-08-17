@@ -1,0 +1,42 @@
+{
+  "scope": "global",
+  "thresholds": {
+    "min_complete_rows": 1000,
+    "min_stations": 20,
+    "min_countries": 5,
+    "min_temporal_days": 30
+  },
+  "measured": {
+    "complete_case_rows": 0,
+    "stations": 0,
+    "countries": 0,
+    "temporal_days": 0,
+    "date_range": null
+  },
+  "sources": {
+    "pm25": {
+      "present": false
+    },
+    "aod": {
+      "present": false
+    },
+    "weather": {
+      "present": false
+    },
+    "ndvi": {
+      "present": false
+    },
+    "dem": {
+      "present": false
+    },
+    "osm": {
+      "present": false
+    },
+    "viirs": {
+      "present": false
+    }
+  },
+  "model_training_ready": "NO",
+  "reason": "complete-case rows 0 < 1000; stations 0 < 20; countries 0 < 5; temporal days 0 < 30; source 'pm25' feature coverage insufficient; source 'aod' feature coverage insufficient; source 'weather' feature coverage insufficient; source 'ndvi' feature coverage insufficient; source 'dem' feature coverage insufficient; source 'osm' feature coverage insufficient; source 'viirs' feature coverage insufficient",
+  "rule": "Readiness is fully data-derived and never auto-YES."
+}

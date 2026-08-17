@@ -1,0 +1,99 @@
+{
+  "report_version": 1,
+  "built_for_scope": "india",
+  "timestamp": "2026-08-15T13:14:39Z",
+  "observations": {
+    "n_observations": null,
+    "n_daily_rows": null,
+    "n_stations": null,
+    "countries": [],
+    "date_range": null,
+    "qc": {}
+  },
+  "sources": {
+    "aod": {
+      "name": "aod",
+      "status": "UNAVAILABLE",
+      "details": {
+        "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+        "tiles_completed": 0,
+        "tiles_failed": 0,
+        "artifacts": []
+      }
+    },
+    "dem": {
+      "name": "dem",
+      "status": "UNAVAILABLE",
+      "details": {
+        "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+        "tiles_completed": 0,
+        "tiles_failed": 0,
+        "artifacts": [],
+        "nodata": -32768
+      }
+    },
+    "ndvi": {
+      "name": "ndvi",
+      "status": "UNAVAILABLE",
+      "details": {
+        "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+        "tiles_completed": 0,
+        "tiles_failed": 0,
+        "artifacts": [],
+        "composite_metadata": {
+          "target_date": "2025-01-01",
+          "ndvi_date": "2024-12-20",
+          "temporal_offset_days": 12,
+          "no_future_match": true
+        }
+      }
+    },
+    "osm": {
+      "name": "osm",
+      "status": "PARTIAL",
+      "details": {
+        "tiles_completed": 2,
+        "tiles_failed": 1,
+        "artifacts": [
+          "data\\raw\\global\\osm\\india\\roads_tile_000_001.json",
+          "data\\raw\\global\\osm\\india\\roads_tile_000_002.json"
+        ]
+      }
+    },
+    "pm25": {
+      "name": "pm25",
+      "status": "UNAVAILABLE",
+      "details": {
+        "reason": "OpenAQ v3 requires an API key; set OPENAQ_API_KEY (environment only)."
+      }
+    },
+    "viirs": {
+      "name": "viirs",
+      "status": "UNAVAILABLE",
+      "details": {
+        "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+        "tiles_completed": 0,
+        "tiles_failed": 0,
+        "artifacts": [],
+        "qa": {
+          "flag_band": "Mandatory_Quality_Flag",
+          "keep_quality": [
+            0
+          ]
+        }
+      }
+    },
+    "weather": {
+      "name": "weather",
+      "status": "UNAVAILABLE",
+      "details": {
+        "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+        "tiles_completed": 0,
+        "tiles_failed": 0,
+        "artifacts": []
+      }
+    }
+  },
+  "synthetic_data_leakage": "NONE",
+  "note": "Honest coverage report. Sources are AVAILABLE only when real data was actually acquired; missing credentials are reported UNAVAILABLE and no data is fabricated or substituted."
+}

@@ -1,0 +1,91 @@
+{
+    "stage": "alignment",
+    "description": "Master spatiotemporal alignment on common 1 km grid (EPSG:32643)",
+    "status": "PASSED",
+    "analysis_crs": "EPSG:32643",
+    "coarse_grid_resolution_m": 1000,
+    "target_grid_resolution_m": 500,
+    "master_grid_1km_cells": 1804,
+    "master_grid_500m_cells": 7094,
+    "modeling_dates": [
+        "2025-01-01",
+        "2025-01-02",
+        "2025-01-03",
+        "2025-01-04",
+        "2025-01-05",
+        "2025-01-06",
+        "2025-01-07"
+    ],
+    "coverage": {
+        "AOD": {
+            "cell_date_records_present": 0,
+            "cell_date_records_total": 12628,
+            "percent_available": 0.0
+        },
+        "WEATHER": {
+            "cell_date_records_present": 6083,
+            "cell_date_records_total": 12628,
+            "percent_available": 48.17
+        },
+        "NDVI": {
+            "cell_date_records_present": 12229,
+            "cell_date_records_total": 12628,
+            "percent_available": 96.84
+        },
+        "DEM": {
+            "cell_date_records_present": 12600,
+            "cell_date_records_total": 12628,
+            "percent_available": 99.78
+        },
+        "OSM": {
+            "cell_date_records_present": 12628,
+            "cell_date_records_total": 12628,
+            "percent_available": 100.0
+        },
+        "VIIRS": {
+            "cell_date_records_present": 6984,
+            "cell_date_records_total": 12628,
+            "percent_available": 55.31
+        },
+        "CPCB": {
+            "station_date_records": 35,
+            "stations": 5,
+            "dates_with_observations": 7,
+            "dates_total": 7,
+            "date_range": [
+                "2025-01-01",
+                "2025-01-02",
+                "2025-01-03",
+                "2025-01-04",
+                "2025-01-05",
+                "2025-01-06",
+                "2025-01-07"
+            ]
+        }
+    },
+    "qc_checks": {
+        "analysis_crs": "32643",
+        "master_grid_1km_ids_unique": "True",
+        "master_grid_500m_ids_unique": "True",
+        "all_target_cells_have_parent": "True",
+        "grid_geometries_valid": "True",
+        "grid_crs_matches_analysis": "True",
+        "no_duplicate_grid_date": "True",
+        "no_duplicate_station_date": "True",
+        "cpcb_pm25_not_in_feature_table": "True",
+        "no_target_interpolation": "True",
+        "no_future_ndvi_leakage": "True",
+        "no_future_viirs_leakage": "True",
+        "missing_is_nodata_not_zero": "True"
+    },
+    "qc_checks_passed": true,
+    "qc_failures": {},
+    "outputs": {
+        "master_grid_1km": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\master_grid_1km.parquet",
+        "master_grid_500m": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\master_grid_500m.parquet",
+        "master_features_1km": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\master_features_1km.parquet",
+        "cpcb_grid_observations": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\cpcb_grid_observations.parquet",
+        "master_alignment_png": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\outputs\\master_alignment.png"
+    },
+    "notes": "No ML, no imputation, no target interpolation performed. PM2.5 kept separate in cpcb_grid_observations.parquet. Missing values are NoData (NaN), never zero-filled."
+}

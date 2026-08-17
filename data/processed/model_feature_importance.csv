@@ -1,0 +1,15 @@
+feature,random_forest_importance,xgboost_gain,rf_relative_share,xgb_relative_share
+temperature_c,0.288527,38.625702,0.2885,0.0844
+relative_humidity_pct,0.166191,21.570713,0.1662,0.0471
+road_density,0.12754,46.112858,0.1275,0.1008
+wind_u_mps,0.099373,37.501076,0.0994,0.0819
+wind_v_mps,0.063173,14.802535,0.0632,0.0323
+wind_direction_deg,0.061485,34.295883,0.0615,0.0749
+elevation_m,0.055906,24.824301,0.0559,0.0542
+wind_speed_mps,0.045067,46.422985,0.0451,0.1014
+NDVI,0.039457,50.319141,0.0395,0.1099
+night_lights,0.035482,113.827133,0.0355,0.2487
+day_of_year,0.010104,23.405775,0.0101,0.0511
+sin_day_of_year,0.004274,5.986525,0.0043,0.0131
+cos_day_of_year,0.003422,0.0,0.0034,0.0
+month,0.0,0.0,0.0,0.0

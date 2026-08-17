@@ -1,0 +1,48 @@
+{
+    "source": "OpenStreetMap",
+    "aoi": {
+        "latitude_range": [
+            28.4,
+            28.8
+        ],
+        "longitude_range": [
+            77.0,
+            77.4
+        ]
+    },
+    "metric_crs": "EPSG:32643",
+    "highway_classes_included": [
+        "motorway",
+        "trunk",
+        "primary",
+        "secondary",
+        "tertiary",
+        "unclassified",
+        "residential",
+        "living_street",
+        "service"
+    ],
+    "road_density_unit": "metres of road per square kilometre (m/km2)",
+    "road_density_formula": "total_road_length_m / cell_area_km2",
+    "input_file": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\raw\\osm\\osm_roads.geojson",
+    "output_file": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\road_density.parquet",
+    "grid_resolution_m": 1000.0,
+    "grid_cell_count": 1804,
+    "cells_with_roads": 1575,
+    "cells_without_roads": 229,
+    "min_road_density": 1.0078943655453454,
+    "max_road_density": 7532.709142407333,
+    "mean_road_density": 1540.7111371202714,
+    "total_road_length_m": 2347034.7320889877,
+    "roads_removed_by_highway_filter": 0,
+    "geometry_validation": {
+        "input_road_count": 197,
+        "missing_geometry_count": 0,
+        "empty_geometry_count": 0,
+        "missing_highway_count": 0,
+        "invalid_geometry_count": 0,
+        "repaired_geometry_count": 0,
+        "retained_road_count": 197
+    },
+    "processing_status": "COMPLETED"
+}

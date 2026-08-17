@@ -1,0 +1,28 @@
+{
+  "scope": "global",
+  "hierarchy": {
+    "stations": 0,
+    "countries": 0,
+    "regions": 0,
+    "countries_per_region": {},
+    "stations_per_country": {}
+  },
+  "loso": {
+    "method": "Leave-One-Station-Out",
+    "status": "INSUFFICIENT_DATA",
+    "n_stations": 0,
+    "min_stations_required": 5,
+    "n_complete_case_rows": 0,
+    "reason": "Only 0 station(s) and 0 complete-case row(s); a LOSO fold set is not defensible with this data."
+  },
+  "loco": {
+    "method": "Leave-One-Country-Out",
+    "status": "INSUFFICIENT_DATA",
+    "n_countries": 0,
+    "min_countries_required": 2,
+    "n_complete_case_rows": 0,
+    "reason": "Only 0 country/countries and 0 complete-case row(s); a LOCO fold set is not defensible with this data."
+  },
+  "note": "Split assignments describe the real data. Model training is NOT performed in Milestone 17; folds are never manufactured.",
+  "path": "data\\processed\\global\\validation\\global_spatial_split_assignments.parquet"
+}

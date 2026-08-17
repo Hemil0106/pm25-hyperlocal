@@ -1,0 +1,138 @@
+{
+    "input_dimensions": {
+        "time": 145,
+        "latitude": 4,
+        "longitude": 4
+    },
+    "date_range": [
+        "2025-01-01",
+        "2025-01-07"
+    ],
+    "variables": [
+        "temperature",
+        "relative_humidity",
+        "u_wind",
+        "v_wind",
+        "wind_speed",
+        "wind_direction"
+    ],
+    "variable_statistics": {
+        "temperature": {
+            "nan_count": 4,
+            "valid_count": 2316,
+            "total_count": 2320,
+            "missing_fraction": 0.001724,
+            "min": 9.567634794945945,
+            "max": 25.75916661920752,
+            "mean": 17.88271546454393
+        },
+        "relative_humidity": {
+            "nan_count": 145,
+            "valid_count": 2175,
+            "total_count": 2320,
+            "missing_fraction": 0.0625,
+            "min": 47.533717012186955,
+            "max": 92.12171511543959,
+            "mean": 70.091172049983
+        },
+        "u_wind": {
+            "nan_count": 0,
+            "valid_count": 2320,
+            "total_count": 2320,
+            "missing_fraction": 0.0,
+            "min": 0.05187720228692583,
+            "max": 5.026120540604029,
+            "mean": 2.500087600005479
+        },
+        "v_wind": {
+            "nan_count": 0,
+            "valid_count": 2320,
+            "total_count": 2320,
+            "missing_fraction": 0.0,
+            "min": -0.6581339625296544,
+            "max": 2.574644123262936,
+            "mean": 0.9932439992203752
+        },
+        "wind_speed": {
+            "nan_count": 0,
+            "valid_count": 2320,
+            "total_count": 2320,
+            "missing_fraction": 0.0,
+            "min": 0.4252484840186746,
+            "max": 5.200694230632958,
+            "mean": 2.795984786247688
+        },
+        "wind_direction": {
+            "nan_count": 0,
+            "valid_count": 2320,
+            "total_count": 2320,
+            "missing_fraction": 0.0,
+            "min": 182.31735722006832,
+            "max": 299.91214758619435,
+            "mean": 245.64541422487522
+        }
+    },
+    "empty_time_slices": {
+        "temperature": {
+            "count": 0,
+            "dates": []
+        },
+        "relative_humidity": {
+            "count": 0,
+            "dates": []
+        },
+        "u_wind": {
+            "count": 0,
+            "dates": []
+        },
+        "v_wind": {
+            "count": 0,
+            "dates": []
+        },
+        "wind_speed": {
+            "count": 0,
+            "dates": []
+        },
+        "wind_direction": {
+            "count": 0,
+            "dates": []
+        }
+    },
+    "flagged_values": {
+        "temperature_out_of_range": {
+            "count": 0,
+            "min_degC": 9.567634794945945,
+            "max_degC": 25.75916661920752,
+            "bounds_degC": [
+                -50.0,
+                60.0
+            ]
+        },
+        "relative_humidity_out_of_bounds": {
+            "count": 0,
+            "bounds_percent": [
+                0.0,
+                100.0
+            ]
+        },
+        "wind_speed_suspicious_high": {
+            "count": 0,
+            "max_mps": 5.200694230632958,
+            "threshold_mps": 60.0
+        }
+    },
+    "aoi_coverage": {
+        "latitude_range": [
+            28.450000000000003,
+            28.750000000000007
+        ],
+        "longitude_range": [
+            77.05,
+            77.34999999999998
+        ],
+        "spatial_cells": 16
+    },
+    "daily_record_count": 7,
+    "time_steps": 145,
+    "suspicious_values_policy": "Flagged only - no values removed."
+}

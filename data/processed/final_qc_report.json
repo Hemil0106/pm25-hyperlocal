@@ -1,0 +1,26 @@
+{
+    "stage": "final_geospatial_outputs",
+    "status": "PASSED",
+    "date": "2025-01-01",
+    "checks": {
+        "pm25_1km_raster_exists": true,
+        "pm25_500m_raster_exists": true,
+        "aqi_500m_raster_exists": true,
+        "aqi_500m_table_exists": true,
+        "hotspots_geojson_exists": true,
+        "hotspot_statistics_json_exists": true,
+        "uncertainty_status_json_exists": true,
+        "pm25_crs": "EPSG:32643",
+        "aqi_crs": "EPSG:32643",
+        "crs_consistent": true,
+        "resolution_consistent": true,
+        "nodata_pm25": -9999.0,
+        "nodata_aqi": -9999.0,
+        "aqi_geometry_valid": true,
+        "every_valid_aqi_has_valid_pm25": true,
+        "every_valid_aqi_cell_is_valid_pm25_cell": true,
+        "hotspot_cells_have_valid_pm25": true,
+        "hotspot_inside_aoi": true
+    },
+    "decision": "FINAL GEOSPATIAL PACKAGE READY"
+}

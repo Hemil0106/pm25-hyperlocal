@@ -1,0 +1,11 @@
+{
+  "failures": [
+    {
+      "source": "osm",
+      "product": "OpenStreetMap roads",
+      "date": "2025-01-01",
+      "tile_id": "tile_000_000",
+      "error": "504 Server Error: Gateway Timeout for url: https://overpass-api.de/api/interpreter"
+    }
+  ]
+}

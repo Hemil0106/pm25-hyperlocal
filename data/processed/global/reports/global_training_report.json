@@ -1,0 +1,180 @@
+{
+  "stage": "MILESTONE_17_GLOBAL_TRAINING_DATA",
+  "scope": "global",
+  "timestamp": "2026-08-15T13:48:01Z",
+  "files": {
+    "training_outputs": {
+      "training_dataset": "data\\processed\\global\\training\\global_training_dataset.parquet",
+      "complete": "data\\processed\\global\\training\\global_training_dataset_complete.parquet",
+      "incomplete": "data\\processed\\global\\training\\global_training_dataset_incomplete.parquet"
+    },
+    "reports": {
+      "feature_coverage": "data\\processed\\global\\reports\\global_feature_coverage_report.json",
+      "target": "data\\processed\\global\\reports\\global_target_report.json",
+      "readiness": "data\\processed\\global\\reports\\global_training_readiness.json",
+      "validation_groups": "data\\processed\\global\\validation\\global_validation_groups.json",
+      "correlation_csv": "data\\processed\\global\\diagnostics\\global_feature_correlation.csv"
+    },
+    "visuals": []
+  },
+  "dataset_summary": {
+    "rows": 0,
+    "stations": 0,
+    "countries": 0,
+    "date_range": null,
+    "complete_case_rows": 0
+  },
+  "feature_coverage": {
+    "complete_case_rows": 0,
+    "missingness_by_feature": [
+      {
+        "column": "PM2.5",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "AOD",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "temperature_c",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "relative_humidity_pct",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "wind_speed_mps",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "wind_direction_deg",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "NDVI",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "elevation_m",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "road_density",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "night_lights",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "wind_u_mps",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "wind_v_mps",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "month",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "day_of_year",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "sin_day_of_year",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      },
+      {
+        "column": "cos_day_of_year",
+        "n_non_null": 0,
+        "n_null": 0,
+        "pct_missing": 1.0
+      }
+    ],
+    "geographic_bias": []
+  },
+  "target": {
+    "distribution": null,
+    "completeness_flag": "insufficient"
+  },
+  "correlation": {
+    "status": "no_data",
+    "note": "No complete-case rows; correlation not computable."
+  },
+  "spatial_validation": {
+    "loso": {
+      "status": "INSUFFICIENT_DATA",
+      "reason": "Only 0 station(s) and 0 complete-case row(s); a LOSO fold set is not defensible with this data."
+    },
+    "loco": {
+      "status": "INSUFFICIENT_DATA",
+      "reason": "Only 0 country/countries and 0 complete-case row(s); a LOCO fold set is not defensible with this data."
+    },
+    "hierarchy": {
+      "stations": 0,
+      "countries": 0,
+      "regions": 0,
+      "countries_per_region": {},
+      "stations_per_country": {}
+    }
+  },
+  "leakage_checks": {
+    "target_leakage": "PASS",
+    "duplicate_station_date": "PASS",
+    "future_information": "PASS",
+    "same_station_or_country_in_train_test": "N/A",
+    "features_generated_from_pm25": "PASS",
+    "synthetic_contamination": "NONE",
+    "delhi_artifact_contamination": "PASS"
+  },
+  "leakage_overall": "PASS",
+  "synthetic_contamination": "NONE",
+  "delhi_to_global_leakage": "PASS",
+  "global_model_readiness": "NO",
+  "readiness_reason": "complete-case rows 0 < 1000; stations 0 < 20; countries 0 < 5; temporal days 0 < 30; source 'pm25' feature coverage insufficient; source 'aod' feature coverage insufficient; source 'weather' feature coverage insufficient; source 'ndvi' feature coverage insufficient; source 'dem' feature coverage insufficient; source 'osm' feature coverage insufficient; source 'viirs' feature coverage insufficient",
+  "global_ml_not_implemented": true,
+  "global_ml_statement": "Global ML: NOT IMPLEMENTED - intentionally deferred to Milestone 18.",
+  "global_prediction_not_implemented": true,
+  "tests": {
+    "unit": "tests/test_global_training.py (see milestone report)"
+  },
+  "regression": {
+    "backend": "pytest -q",
+    "dashboard": "npm test + npm run build"
+  },
+  "metadata_path": "data\\processed\\global\\metadata\\global_training_metadata.json",
+  "next_stage": "M18 (do not implement yet)"
+}

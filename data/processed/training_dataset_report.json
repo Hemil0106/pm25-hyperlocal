@@ -1,0 +1,232 @@
+{
+    "stage": "training_data",
+    "status": "PASSED",
+    "target": "PM2.5",
+    "random_seed": 42,
+    "dataset_version": "v1",
+    "target_qc": {
+        "total_candidate_rows": 35,
+        "missing_target": 0,
+        "negative_target": 0,
+        "zero_target": 0,
+        "duplicate_station_date": 0,
+        "duplicate_station_grid_date": 0,
+        "invalid_target_rows_removed": 0
+    },
+    "total_candidate_rows": 35,
+    "valid_target_rows": 35,
+    "complete_case_rows": 0,
+    "fallback_non_aod_rows": 16,
+    "n_stations": 5,
+    "station_ids": [
+        "ST_01",
+        "ST_02",
+        "ST_03",
+        "ST_04",
+        "ST_05"
+    ],
+    "n_grid_cells": 12,
+    "date_range": [
+        "2025-01-01",
+        "2025-01-07"
+    ],
+    "feature_count_full": 15,
+    "feature_count_fallback": 14,
+    "target_statistics": {
+        "count": 35.0,
+        "mean": 127.873,
+        "std": 15.358,
+        "min": 94.85,
+        "25%": 116.806,
+        "50%": 127.826,
+        "75%": 137.78,
+        "max": 152.099
+    },
+    "feature_coverage": {
+        "n_candidate_rows": 35,
+        "features": [
+            {
+                "feature": "AOD",
+                "valid_count": 0,
+                "missing_count": 35,
+                "missing_percentage": 100.0,
+                "unique_count": 0,
+                "dtype": "float64"
+            },
+            {
+                "feature": "night_lights",
+                "valid_count": 20,
+                "missing_count": 15,
+                "missing_percentage": 42.86,
+                "unique_count": 11,
+                "dtype": "float64"
+            },
+            {
+                "feature": "relative_humidity_pct",
+                "valid_count": 28,
+                "missing_count": 7,
+                "missing_percentage": 20.0,
+                "unique_count": 28,
+                "dtype": "float64"
+            },
+            {
+                "feature": "wind_speed_mps",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 35,
+                "dtype": "float64"
+            },
+            {
+                "feature": "wind_direction_deg",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 35,
+                "dtype": "float64"
+            },
+            {
+                "feature": "wind_u_mps",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 35,
+                "dtype": "float64"
+            },
+            {
+                "feature": "temperature_c",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 35,
+                "dtype": "float64"
+            },
+            {
+                "feature": "wind_v_mps",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 35,
+                "dtype": "float64"
+            },
+            {
+                "feature": "NDVI",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 12,
+                "dtype": "float64"
+            },
+            {
+                "feature": "elevation_m",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 12,
+                "dtype": "float64"
+            },
+            {
+                "feature": "road_density",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 11,
+                "dtype": "float64"
+            },
+            {
+                "feature": "month",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 1,
+                "dtype": "int64"
+            },
+            {
+                "feature": "day_of_year",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 7,
+                "dtype": "int64"
+            },
+            {
+                "feature": "sin_day_of_year",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 7,
+                "dtype": "float64"
+            },
+            {
+                "feature": "cos_day_of_year",
+                "valid_count": 35,
+                "missing_count": 0,
+                "missing_percentage": 0.0,
+                "unique_count": 7,
+                "dtype": "float64"
+            }
+        ],
+        "top_missing_variables": [
+            {
+                "feature": "AOD",
+                "missing_percentage": 100.0
+            },
+            {
+                "feature": "night_lights",
+                "missing_percentage": 42.86
+            },
+            {
+                "feature": "relative_humidity_pct",
+                "missing_percentage": 20.0
+            }
+        ]
+    },
+    "feature_set_comparison": {
+        "feature_set_A_full_incl_AOD": {
+            "usable_training_rows": 0,
+            "cause_of_loss": "AOD coverage is 0% -> complete-case dataset is EMPTY"
+        },
+        "feature_set_B_non_aod": {
+            "usable_training_rows": 16,
+            "features": [
+                "temperature_c",
+                "relative_humidity_pct",
+                "wind_speed_mps",
+                "wind_direction_deg",
+                "wind_u_mps",
+                "wind_v_mps",
+                "NDVI",
+                "elevation_m",
+                "road_density",
+                "night_lights",
+                "month",
+                "day_of_year",
+                "sin_day_of_year",
+                "cos_day_of_year"
+            ]
+        }
+    },
+    "spatial_validation": {
+        "strategy": "leave_one_group_out",
+        "grouping_column": "location_group",
+        "group_by_source": "station_id",
+        "n_groups": 5,
+        "same_station_in_train_and_test_violations": []
+    },
+    "outputs": {
+        "complete_case": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\training_dataset_complete.parquet",
+        "fallback_non_aod": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\training_dataset_fallback.parquet",
+        "feature_schema": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\feature_schema.json",
+        "feature_coverage": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\feature_coverage_report.json",
+        "feature_correlation_csv": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\feature_correlation.csv",
+        "feature_correlation_png": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\outputs\\feature_correlation.png",
+        "spatial_split_assignments": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\spatial_split_assignments.parquet",
+        "target_distribution_png": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\outputs\\pm25_target_distribution.png"
+    },
+    "scientific_notes": [
+        "CPCB PM2.5 used ONLY as target; no CPCB interpolation.",
+        "AOD is 0% available -> not fabricated, not imputed; exposure is explicit.",
+        "No ML trained, no SHAP, no PM2.5 map, no downscaling, no AQI in this milestone."
+    ],
+    "complete_case_finding": "No complete-case training dataset available because AOD coverage is 0%."
+}

@@ -1,0 +1,139 @@
+{
+    "n_candidate_rows": 35,
+    "features": [
+        {
+            "feature": "AOD",
+            "valid_count": 0,
+            "missing_count": 35,
+            "missing_percentage": 100.0,
+            "unique_count": 0,
+            "dtype": "float64"
+        },
+        {
+            "feature": "night_lights",
+            "valid_count": 20,
+            "missing_count": 15,
+            "missing_percentage": 42.86,
+            "unique_count": 11,
+            "dtype": "float64"
+        },
+        {
+            "feature": "relative_humidity_pct",
+            "valid_count": 28,
+            "missing_count": 7,
+            "missing_percentage": 20.0,
+            "unique_count": 28,
+            "dtype": "float64"
+        },
+        {
+            "feature": "wind_speed_mps",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 35,
+            "dtype": "float64"
+        },
+        {
+            "feature": "wind_direction_deg",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 35,
+            "dtype": "float64"
+        },
+        {
+            "feature": "wind_u_mps",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 35,
+            "dtype": "float64"
+        },
+        {
+            "feature": "temperature_c",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 35,
+            "dtype": "float64"
+        },
+        {
+            "feature": "wind_v_mps",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 35,
+            "dtype": "float64"
+        },
+        {
+            "feature": "NDVI",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 12,
+            "dtype": "float64"
+        },
+        {
+            "feature": "elevation_m",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 12,
+            "dtype": "float64"
+        },
+        {
+            "feature": "road_density",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 11,
+            "dtype": "float64"
+        },
+        {
+            "feature": "month",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 1,
+            "dtype": "int64"
+        },
+        {
+            "feature": "day_of_year",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 7,
+            "dtype": "int64"
+        },
+        {
+            "feature": "sin_day_of_year",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 7,
+            "dtype": "float64"
+        },
+        {
+            "feature": "cos_day_of_year",
+            "valid_count": 35,
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "unique_count": 7,
+            "dtype": "float64"
+        }
+    ],
+    "top_missing_variables": [
+        {
+            "feature": "AOD",
+            "missing_percentage": 100.0
+        },
+        {
+            "feature": "night_lights",
+            "missing_percentage": 42.86
+        },
+        {
+            "feature": "relative_humidity_pct",
+            "missing_percentage": 20.0
+        }
+    ]
+}

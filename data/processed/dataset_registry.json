@@ -1,0 +1,106 @@
+{
+  "registry_version": 1,
+  "built_for_aoi": {
+    "name": "Delhi",
+    "mode": "geometry_file",
+    "bounds": {
+      "west": 77.0,
+      "south": 28.4,
+      "east": 77.4,
+      "north": 28.8
+    },
+    "area_km2": 1734.46
+  },
+  "download_enabled": false,
+  "datasets": {
+    "aod": {
+      "id": "aod",
+      "name": "MODIS MAIAC AOD (MCD19A2)",
+      "type": "gridded",
+      "coverage": "global (1 km)",
+      "enabled": true,
+      "local_data_present": false,
+      "local_path": null
+    },
+    "cpcb": {
+      "id": "cpcb",
+      "name": "CPCB PM2.5 ground observations",
+      "type": "point",
+      "coverage": "India (CPCB network)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/cpcb/cpcb_pm25.csv"
+    },
+    "weather": {
+      "id": "weather",
+      "name": "ERA5-Land meteorology",
+      "type": "gridded",
+      "coverage": "global (ERA5-Land)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/weather/era5_land.nc"
+    },
+    "ndvi": {
+      "id": "ndvi",
+      "name": "MODIS Terra NDVI (MOD13Q1)",
+      "type": "gridded",
+      "coverage": "global (250 m)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/ndvi/ndvi_input.tif"
+    },
+    "osm": {
+      "id": "osm",
+      "name": "OpenStreetMap roads",
+      "type": "vector",
+      "coverage": "global (OpenStreetMap)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/osm/osm_roads.geojson"
+    },
+    "dem": {
+      "id": "dem",
+      "name": "NASA SRTM elevation (GL1)",
+      "type": "gridded",
+      "coverage": "global (SRTM v003)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/dem"
+    },
+    "viirs": {
+      "id": "viirs",
+      "name": "NASA VIIRS night lights (VNP46A2)",
+      "type": "gridded",
+      "coverage": "global (VNP46A2)",
+      "enabled": true,
+      "local_data_present": true,
+      "local_path": "data/raw/viirs/viirs_input.tif"
+    },
+    "ground_truth": {
+      "id": "ground_truth",
+      "name": "Normalized ground-truth PM2.5",
+      "type": "point",
+      "coverage": "derived from configured sources",
+      "enabled": true,
+      "local_data_present": false,
+      "local_path": "data/processed/ground_pm25.parquet",
+      "output_file": "data/processed/ground_pm25.parquet",
+      "sources": {
+        "cpcb": {
+          "enabled": true,
+          "network": "CPCB",
+          "country": "India",
+          "units": "ug/m3",
+          "local_data_present": true
+        },
+        "openaq": {
+          "enabled": false,
+          "network": "OpenAQ",
+          "country": null,
+          "units": "ug/m3",
+          "local_data_present": false
+        }
+      }
+    }
+  }
+}

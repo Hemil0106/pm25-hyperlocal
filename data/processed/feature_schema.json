@@ -1,0 +1,78 @@
+{
+    "target": "PM2.5",
+    "features": [
+        "AOD",
+        "temperature_c",
+        "relative_humidity_pct",
+        "wind_speed_mps",
+        "wind_direction_deg",
+        "wind_u_mps",
+        "wind_v_mps",
+        "NDVI",
+        "elevation_m",
+        "road_density",
+        "night_lights",
+        "month",
+        "day_of_year",
+        "sin_day_of_year",
+        "cos_day_of_year"
+    ],
+    "fallback_features_without_aod": [
+        "temperature_c",
+        "relative_humidity_pct",
+        "wind_speed_mps",
+        "wind_direction_deg",
+        "wind_u_mps",
+        "wind_v_mps",
+        "NDVI",
+        "elevation_m",
+        "road_density",
+        "night_lights",
+        "month",
+        "day_of_year",
+        "sin_day_of_year",
+        "cos_day_of_year"
+    ],
+    "metadata_columns": [
+        "station_id",
+        "grid_id",
+        "date",
+        "latitude",
+        "longitude"
+    ],
+    "traceability_columns": [
+        "AOD_available",
+        "NDVI_available",
+        "VIIRS_available",
+        "weather_available",
+        "DEM_available",
+        "OSM_available",
+        "NDVI_source_date",
+        "NDVI_time_offset",
+        "VIIRS_source_date"
+    ],
+    "feature_units": {
+        "AOD": "unitless (MCD19A2 0.47um)",
+        "temperature_c": "degC",
+        "relative_humidity_pct": "%",
+        "wind_speed_mps": "m/s",
+        "wind_direction_deg": "degrees (meteorological from-north)",
+        "wind_u_mps": "m/s (u-component)",
+        "wind_v_mps": "m/s (v-component)",
+        "NDVI": "unitless (-1..1)",
+        "elevation_m": "metres",
+        "road_density": "m/km2",
+        "night_lights": "nW/cm2/sr",
+        "month": "1-12",
+        "day_of_year": "1-366",
+        "sin_day_of_year": "unitless cyclic encoding",
+        "cos_day_of_year": "unitless cyclic encoding"
+    },
+    "notes": [
+        "No StandardScaler: tree models (RF/XGBoost) do not require scaling.",
+        "wind_speed + u/v kept: u/v retain directionality, speed is magnitude.",
+        "NDVI/VIIRS source dates and offsets are traceability metadata, not predictors.",
+        "BLH not available in the weather product; not invented.",
+        "slope/aspect deferred in DEM milestone; not included."
+    ]
+}

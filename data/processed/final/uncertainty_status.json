@@ -1,0 +1,11 @@
+{
+    "status": "DEFERRED",
+    "method": "none",
+    "reason": "No statistically defensible pixel-level uncertainty can be estimated: training sample is 16 rows / 4 stations, fallback mode, AOD unavailable, and the residual downscaling model was not trained. An RMSE would not constitute a confidence percentage.",
+    "data_requirements": [
+        "larger station training sample",
+        "validated held-out spatial predictions",
+        "trained residual / quantile / ensemble models"
+    ],
+    "future_method": "cross-validation residual error scale (labelled 'estimated error scale', not 'confidence') once sufficient data exist"
+}

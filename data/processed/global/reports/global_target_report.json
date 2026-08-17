@@ -1,0 +1,11 @@
+{
+  "target": "PM2.5",
+  "rows": 0,
+  "n_target_valid": 0,
+  "n_complete_case_rows": 0,
+  "complete_case_ratio": 0.0,
+  "distribution": null,
+  "completeness_flag": "insufficient",
+  "reason": "No valid PM2.5 target values; no thresholds invented.",
+  "min_complete_rows_for_modeling": 20
+}

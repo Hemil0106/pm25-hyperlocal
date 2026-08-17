@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "built_for_scope": "global",
+  "generated_timestamp": "2026-08-15T13:48:01Z",
+  "input_manifest": {
+    "daily_observations": {
+      "path": "data\\processed\\global\\pm25\\global_pm25_daily.parquet",
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "osm_tiles": {
+    "n_tile_artifacts": 3,
+    "tile_ids": [
+      "tile_000_000",
+      "tile_000_001",
+      "tile_000_002"
+    ]
+  },
+  "columns": [
+    "station_id",
+    "station_name",
+    "country",
+    "city",
+    "latitude",
+    "longitude",
+    "date",
+    "PM2.5",
+    "AOD",
+    "temperature_c",
+    "relative_humidity_pct",
+    "wind_speed_mps",
+    "wind_direction_deg",
+    "NDVI",
+    "elevation_m",
+    "road_density",
+    "night_lights",
+    "wind_u_mps",
+    "wind_v_mps",
+    "month",
+    "day_of_year",
+    "sin_day_of_year",
+    "cos_day_of_year",
+    "AOD_available",
+    "temperature_c_available",
+    "relative_humidity_pct_available",
+    "wind_speed_mps_available",
+    "wind_direction_deg_available",
+    "NDVI_available",
+    "elevation_m_available",
+    "road_density_available",
+    "night_lights_available",
+    "wind_u_mps_available",
+    "wind_v_mps_available",
+    "NDVI_source_date",
+    "NDVI_offset_days",
+    "complete_case",
+    "n_features_available"
+  ],
+  "feature_source_map": {
+    "AOD": "aod",
+    "temperature_c": "weather",
+    "relative_humidity_pct": "weather",
+    "wind_speed_mps": "weather",
+    "wind_direction_deg": "weather",
+    "wind_u_mps": "weather",
+    "wind_v_mps": "weather",
+    "NDVI": "ndvi",
+    "elevation_m": "dem",
+    "road_density": "osm",
+    "night_lights": "viirs"
+  },
+  "feature_engineering_rules": [
+    "month/day_of_year/sin/cos derived from the row's own date.",
+    "wind_u/v = -speed*sin(dir), -speed*cos(dir) only when both are real.",
+    "Features are never generated from the PM2.5 target."
+  ],
+  "builder_report": {
+    "rows": 0,
+    "status": "empty",
+    "reason": "No real daily observations available for this scope.",
+    "complete_case_rows": 0,
+    "stations": 0,
+    "countries": 0,
+    "osm_tile_artifacts": 3
+  },
+  "feature_coverage_summary": {
+    "rows": 0,
+    "stations": 0,
+    "countries": 0,
+    "complete_case_rows": 0
+  },
+  "readiness": {
+    "model_training_ready": "NO",
+    "reason": "complete-case rows 0 < 1000; stations 0 < 20; countries 0 < 5; temporal days 0 < 30; source 'pm25' feature coverage insufficient; source 'aod' feature coverage insufficient; source 'weather' feature coverage insufficient; source 'ndvi' feature coverage insufficient; source 'dem' feature coverage insufficient; source 'osm' feature coverage insufficient; source 'viirs' feature coverage insufficient"
+  },
+  "limitations": [
+    "Unavailable features are NaN with per-feature available flags; nothing is fabricated.",
+    "Gridded features (AOD/weather/NDVI/DEM/night lights) depend on real Milestone 16 acquisition; with no credentials they are unavailable.",
+    "road_density is a per-tile OSM road-segment count (a spatial proxy, not a measurement).",
+    "station_name/city are NaN because no reverse-geocoding or display-name acquisition was performed (never fabricated).",
+    "Temporal features are derived from the row's own date only (no future information).",
+    "No global ML model is trained and no prediction is made in Milestone 17."
+  ],
+  "global_ml_not_implemented": true,
+  "global_prediction_not_implemented": true
+}

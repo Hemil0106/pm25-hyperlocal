@@ -1,0 +1,61 @@
+{
+    "stage": "spatial_inference",
+    "status": "PASSED",
+    "date": "2025-01-01",
+    "model": "XGBoost",
+    "model_version": "fallback_v1",
+    "dataset_mode": "fallback",
+    "AOD_used": false,
+    "feature_count": 14,
+    "feature_order": [
+        "temperature_c",
+        "relative_humidity_pct",
+        "wind_speed_mps",
+        "wind_direction_deg",
+        "wind_u_mps",
+        "wind_v_mps",
+        "NDVI",
+        "elevation_m",
+        "road_density",
+        "night_lights",
+        "month",
+        "day_of_year",
+        "sin_day_of_year",
+        "cos_day_of_year"
+    ],
+    "total_grid_cells": 1804,
+    "valid_prediction_cells": 816,
+    "NoData_cells": 988,
+    "prediction_coverage_percent": 45.23,
+    "prediction_min": 109.531,
+    "prediction_max": 143.293,
+    "prediction_mean": 124.78,
+    "negative_prediction_count": 0,
+    "negative_policy": "none",
+    "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"ProjectedCRS\", \"name\": \"WGS 84 / UTM zone 43N\", \"base_crs\": {\"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}, \"conversion\": {\"name\": \"UTM zone 43N\", \"method\": {\"name\": \"Transverse Mercator\", \"id\": {\"authority\": \"EPSG\", \"code\": 9807}}, \"parameters\": [{\"name\": \"Latitude of natural origin\", \"value\": 0, \"unit\": \"degree\", \"id\": {\"authority\": \"EPSG\", \"code\": 8801}}, {\"name\": \"Longitude of natural origin\", \"value\": 75, \"unit\": \"degree\", \"id\": {\"authority\": \"EPSG\", \"code\": 8802}}, {\"name\": \"Scale factor at natural origin\", \"value\": 0.9996, \"unit\": \"unity\", \"id\": {\"authority\": \"EPSG\", \"code\": 8805}}, {\"name\": \"False easting\", \"value\": 500000, \"unit\": \"metre\", \"id\": {\"authority\": \"EPSG\", \"code\": 8806}}, {\"name\": \"False northing\", \"value\": 0, \"unit\": \"metre\", \"id\": {\"authority\": \"EPSG\", \"code\": 8807}}]}, \"coordinate_system\": {\"subtype\": \"Cartesian\", \"axis\": [{\"name\": \"Easting\", \"abbreviation\": \"E\", \"direction\": \"east\", \"unit\": \"metre\"}, {\"name\": \"Northing\", \"abbreviation\": \"N\", \"direction\": \"north\", \"unit\": \"metre\"}]}, \"scope\": \"Navigation and medium accuracy spatial referencing.\", \"area\": \"Between 72\\u00b0E and 78\\u00b0E, northern hemisphere between equator and 84\\u00b0N, onshore and offshore. China. India. Kazakhstan. Kyrgyzstan. Maldives. Pakistan. Russian Federation. Tajikistan.\", \"bbox\": {\"south_latitude\": 0, \"west_longitude\": 72, \"north_latitude\": 84, \"east_longitude\": 78}, \"id\": {\"authority\": \"EPSG\", \"code\": 32643}}",
+    "raster_actual_resolution_m": [
+        1000.0,
+        1000.0
+    ],
+    "raster_pixel_count": [
+        46,
+        40
+    ],
+    "units": "ug/m3",
+    "station_sanity_check": {
+        "n_station_cells_matched": 4,
+        "station_mae_ug_m3": 0.391,
+        "note": "spatial output sanity check only; NOT independent validation (model already validated with held-out stations)"
+    },
+    "outputs": {
+        "prediction_table": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\pm25_1km_predictions.parquet",
+        "raster": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\pm25_1km_2025-01-01.tif",
+        "visualization": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\outputs\\pm25_1km_2025-01-01.png"
+    },
+    "processing_timestamp": "2026-08-14 23:07:39.580827",
+    "scientific_notes": [
+        "Spatial inference uses the fallback model because real AOD data are currently unavailable. Predictions are not production-quality air-quality estimates.",
+        "PROTOTYPE / PIPELINE DEMONSTRATION ONLY - map is predicted, not measured.",
+        "No CPCB interpolation; missing predictor vectors -> NoData."
+    ]
+}

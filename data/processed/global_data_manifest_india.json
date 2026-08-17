@@ -1,0 +1,137 @@
+{
+  "manifest_version": 1,
+  "built_for_scope": "india",
+  "scope_bounds": {
+    "west": 65.0,
+    "south": 5.0,
+    "east": 100.0,
+    "north": 40.0
+  },
+  "timestamp": "2026-08-15T13:14:39Z",
+  "source_statuses": {
+    "aod": "unavailable",
+    "dem": "unavailable",
+    "ndvi": "unavailable",
+    "osm": "available",
+    "pm25": "unavailable",
+    "viirs": "unavailable",
+    "weather": "unavailable"
+  },
+  "artifacts": [
+    {
+      "source": "osm",
+      "path": "data\\raw\\global\\osm\\india\\roads_tile_000_001.json",
+      "sha256": "02ed4f8b3b28c9a9a5cf0f42e9ea61e7ee6d367f25765e1503f6276a8cfa424d"
+    },
+    {
+      "source": "osm",
+      "path": "data\\raw\\global\\osm\\india\\roads_tile_000_002.json",
+      "sha256": "98b79bb86e998df35cb4f24077eade13d86712ccb2c17f587f5d72cb925a5f47"
+    }
+  ],
+  "coverage_report": {
+    "report_version": 1,
+    "built_for_scope": "india",
+    "timestamp": "2026-08-15T13:14:39Z",
+    "observations": {
+      "n_observations": null,
+      "n_daily_rows": null,
+      "n_stations": null,
+      "countries": [],
+      "date_range": null,
+      "qc": {}
+    },
+    "sources": {
+      "aod": {
+        "name": "aod",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": []
+        }
+      },
+      "dem": {
+        "name": "dem",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": [],
+          "nodata": -32768
+        }
+      },
+      "ndvi": {
+        "name": "ndvi",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": [],
+          "composite_metadata": {
+            "target_date": "2025-01-01",
+            "ndvi_date": "2024-12-20",
+            "temporal_offset_days": 12,
+            "no_future_match": true
+          }
+        }
+      },
+      "osm": {
+        "name": "osm",
+        "status": "PARTIAL",
+        "details": {
+          "tiles_completed": 2,
+          "tiles_failed": 1,
+          "artifacts": [
+            "data\\raw\\global\\osm\\india\\roads_tile_000_001.json",
+            "data\\raw\\global\\osm\\india\\roads_tile_000_002.json"
+          ]
+        }
+      },
+      "pm25": {
+        "name": "pm25",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "OpenAQ v3 requires an API key; set OPENAQ_API_KEY (environment only)."
+        }
+      },
+      "viirs": {
+        "name": "viirs",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": [],
+          "qa": {
+            "flag_band": "Mandatory_Quality_Flag",
+            "keep_quality": [
+              0
+            ]
+          }
+        }
+      },
+      "weather": {
+        "name": "weather",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": []
+        }
+      }
+    },
+    "synthetic_data_leakage": "NONE",
+    "note": "Honest coverage report. Sources are AVAILABLE only when real data was actually acquired; missing credentials are reported UNAVAILABLE and no data is fabricated or substituted."
+  },
+  "synthetic_data_leakage": "NONE",
+  "scope_isolation": {
+    "policy": "requested_scope == artifact_scope; artifacts outside the requested scope are refused.",
+    "verified": "OK"
+  },
+  "ml_not_implemented": "Global ML training is NOT part of Milestone 16. This manifest describes acquired data only; no predictions are produced."
+}

@@ -1,0 +1,301 @@
+{
+    "stage": "model_training",
+    "status": "PASSED",
+    "dataset_mode": "fallback",
+    "aod_available": false,
+    "target": "PM2.5",
+    "feature_list": [
+        "temperature_c",
+        "relative_humidity_pct",
+        "wind_speed_mps",
+        "wind_direction_deg",
+        "wind_u_mps",
+        "wind_v_mps",
+        "NDVI",
+        "elevation_m",
+        "road_density",
+        "night_lights",
+        "month",
+        "day_of_year",
+        "sin_day_of_year",
+        "cos_day_of_year"
+    ],
+    "training_row_count": 16,
+    "station_count": 4,
+    "station_ids": [
+        "ST_01",
+        "ST_02",
+        "ST_04",
+        "ST_05"
+    ],
+    "training_date_range": [
+        "2025-01-01",
+        "2025-01-04"
+    ],
+    "validation_strategy": "leave_one_group_out",
+    "n_folds": 4,
+    "folds": [
+        {
+            "fold": 0,
+            "held_out_station": [
+                "ST_01"
+            ],
+            "n_train": 12,
+            "n_test": 4,
+            "RandomForest": {
+                "mae": 11.469,
+                "rmse": 16.787,
+                "r2": -3.492,
+                "r2_reason": null,
+                "n": 4
+            },
+            "XGBoost": {
+                "mae": 18.016,
+                "rmse": 24.128,
+                "r2": -8.279,
+                "r2_reason": null,
+                "n": 4
+            }
+        },
+        {
+            "fold": 1,
+            "held_out_station": [
+                "ST_02"
+            ],
+            "n_train": 12,
+            "n_test": 4,
+            "RandomForest": {
+                "mae": 18.413,
+                "rmse": 20.327,
+                "r2": -0.309,
+                "r2_reason": null,
+                "n": 4
+            },
+            "XGBoost": {
+                "mae": 20.372,
+                "rmse": 21.651,
+                "r2": -0.485,
+                "r2_reason": null,
+                "n": 4
+            }
+        },
+        {
+            "fold": 2,
+            "held_out_station": [
+                "ST_04"
+            ],
+            "n_train": 12,
+            "n_test": 4,
+            "RandomForest": {
+                "mae": 10.336,
+                "rmse": 12.387,
+                "r2": -2.904,
+                "r2_reason": null,
+                "n": 4
+            },
+            "XGBoost": {
+                "mae": 9.194,
+                "rmse": 10.341,
+                "r2": -1.721,
+                "r2_reason": null,
+                "n": 4
+            }
+        },
+        {
+            "fold": 3,
+            "held_out_station": [
+                "ST_05"
+            ],
+            "n_train": 12,
+            "n_test": 4,
+            "RandomForest": {
+                "mae": 5.865,
+                "rmse": 6.521,
+                "r2": -0.291,
+                "r2_reason": null,
+                "n": 4
+            },
+            "XGBoost": {
+                "mae": 5.488,
+                "rmse": 7.274,
+                "r2": -0.607,
+                "r2_reason": null,
+                "n": 4
+            }
+        }
+    ],
+    "aggregated_metrics": {
+        "RandomForest": {
+            "mean_fold_mae": 11.521,
+            "mean_fold_rmse": 14.006,
+            "mean_fold_r2": -1.749,
+            "valid_r2_folds": 4,
+            "r2_undefined_folds": 0,
+            "pooled_oof_mae": 11.521,
+            "pooled_oof_rmse": 14.925,
+            "pooled_oof_r2": -0.447
+        },
+        "XGBoost": {
+            "mean_fold_mae": 13.268,
+            "mean_fold_rmse": 15.848,
+            "mean_fold_r2": -2.773,
+            "valid_r2_folds": 4,
+            "r2_undefined_folds": 0,
+            "pooled_oof_mae": 13.267,
+            "pooled_oof_rmse": 17.398,
+            "pooled_oof_r2": -0.966
+        }
+    },
+    "model_comparison": [
+        {
+            "model": "RandomForest",
+            "mean_fold_mae": 11.521,
+            "mean_fold_rmse": 14.006,
+            "mean_fold_r2": -1.749,
+            "pooled_oof_mae": 11.521,
+            "pooled_oof_rmse": 14.925,
+            "pooled_oof_r2": -0.447,
+            "valid_folds": 4
+        },
+        {
+            "model": "XGBoost",
+            "mean_fold_mae": 13.268,
+            "mean_fold_rmse": 15.848,
+            "mean_fold_r2": -2.773,
+            "pooled_oof_mae": 13.267,
+            "pooled_oof_rmse": 17.398,
+            "pooled_oof_r2": -0.966,
+            "valid_folds": 4
+        }
+    ],
+    "random_seed": 42,
+    "hyperparameters": {
+        "RandomForest": {
+            "n_estimators": 200,
+            "max_depth": 6,
+            "min_samples_leaf": 2
+        },
+        "XGBoost": {
+            "n_estimators": 200,
+            "max_depth": 3,
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "reg_alpha": 0.1,
+            "reg_lambda": 1.0
+        }
+    },
+    "feature_importance": [
+        {
+            "feature": "temperature_c",
+            "random_forest_importance": 0.288527,
+            "xgboost_gain": 38.625702,
+            "rf_relative_share": 0.2885,
+            "xgb_relative_share": 0.0844
+        },
+        {
+            "feature": "relative_humidity_pct",
+            "random_forest_importance": 0.166191,
+            "xgboost_gain": 21.570713,
+            "rf_relative_share": 0.1662,
+            "xgb_relative_share": 0.0471
+        },
+        {
+            "feature": "road_density",
+            "random_forest_importance": 0.12754,
+            "xgboost_gain": 46.112858,
+            "rf_relative_share": 0.1275,
+            "xgb_relative_share": 0.1008
+        },
+        {
+            "feature": "wind_u_mps",
+            "random_forest_importance": 0.099373,
+            "xgboost_gain": 37.501076,
+            "rf_relative_share": 0.0994,
+            "xgb_relative_share": 0.0819
+        },
+        {
+            "feature": "wind_v_mps",
+            "random_forest_importance": 0.063173,
+            "xgboost_gain": 14.802535,
+            "rf_relative_share": 0.0632,
+            "xgb_relative_share": 0.0323
+        },
+        {
+            "feature": "wind_direction_deg",
+            "random_forest_importance": 0.061485,
+            "xgboost_gain": 34.295883,
+            "rf_relative_share": 0.0615,
+            "xgb_relative_share": 0.0749
+        },
+        {
+            "feature": "elevation_m",
+            "random_forest_importance": 0.055906,
+            "xgboost_gain": 24.824301,
+            "rf_relative_share": 0.0559,
+            "xgb_relative_share": 0.0542
+        },
+        {
+            "feature": "wind_speed_mps",
+            "random_forest_importance": 0.045067,
+            "xgboost_gain": 46.422985,
+            "rf_relative_share": 0.0451,
+            "xgb_relative_share": 0.1014
+        },
+        {
+            "feature": "NDVI",
+            "random_forest_importance": 0.039457,
+            "xgboost_gain": 50.319141,
+            "rf_relative_share": 0.0395,
+            "xgb_relative_share": 0.1099
+        },
+        {
+            "feature": "night_lights",
+            "random_forest_importance": 0.035482,
+            "xgboost_gain": 113.827133,
+            "rf_relative_share": 0.0355,
+            "xgb_relative_share": 0.2487
+        },
+        {
+            "feature": "day_of_year",
+            "random_forest_importance": 0.010104,
+            "xgboost_gain": 23.405775,
+            "rf_relative_share": 0.0101,
+            "xgb_relative_share": 0.0511
+        },
+        {
+            "feature": "sin_day_of_year",
+            "random_forest_importance": 0.004274,
+            "xgboost_gain": 5.986525,
+            "rf_relative_share": 0.0043,
+            "xgb_relative_share": 0.0131
+        },
+        {
+            "feature": "cos_day_of_year",
+            "random_forest_importance": 0.003422,
+            "xgboost_gain": 0.0,
+            "rf_relative_share": 0.0034,
+            "xgb_relative_share": 0.0
+        },
+        {
+            "feature": "month",
+            "random_forest_importance": 0.0,
+            "xgboost_gain": 0.0,
+            "rf_relative_share": 0.0,
+            "xgb_relative_share": 0.0
+        }
+    ],
+    "warning": "MODEL PERFORMANCE IS PROVISIONAL / PIPELINE VALIDATION ONLY. 16 fallback rows from 4 stations is far too small for production-grade accuracy. Do not present these metrics as the scientific model result.",
+    "outputs": {
+        "model_cv_predictions": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\model_cv_predictions.parquet",
+        "model_cv_splits": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\model_cv_splits.parquet",
+        "cv_metrics_by_fold": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\cv_metrics_by_fold.csv",
+        "model_feature_importance_csv": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\model_feature_importance.csv",
+        "model_feature_importance_png": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\outputs\\model_feature_importance.png",
+        "predicted_vs_observed_png": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\outputs\\predicted_vs_observed.png",
+        "residual_distribution_png": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\outputs\\residual_distribution.png",
+        "model_comparison_png": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\outputs\\model_comparison.png",
+        "xgboost_artifact": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\models\\xgboost_pm25.json",
+        "random_forest_artifact": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\models\\random_forest_pm25.joblib"
+    }
+}

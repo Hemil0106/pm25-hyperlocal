@@ -1,0 +1,123 @@
+{
+  "manifest_version": 1,
+  "built_for_scope": "delhi",
+  "scope_bounds": {
+    "west": 77.0,
+    "south": 28.4,
+    "east": 77.4,
+    "north": 28.8
+  },
+  "timestamp": "2026-08-15T13:13:47Z",
+  "source_statuses": {
+    "aod": "unavailable",
+    "dem": "unavailable",
+    "ndvi": "unavailable",
+    "osm": "failed",
+    "pm25": "unavailable",
+    "viirs": "unavailable",
+    "weather": "unavailable"
+  },
+  "artifacts": [],
+  "coverage_report": {
+    "report_version": 1,
+    "built_for_scope": "delhi",
+    "timestamp": "2026-08-15T13:13:47Z",
+    "observations": {
+      "n_observations": null,
+      "n_daily_rows": null,
+      "n_stations": null,
+      "countries": [],
+      "date_range": null,
+      "qc": {}
+    },
+    "sources": {
+      "aod": {
+        "name": "aod",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": []
+        }
+      },
+      "dem": {
+        "name": "dem",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": [],
+          "nodata": -32768
+        }
+      },
+      "ndvi": {
+        "name": "ndvi",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": [],
+          "composite_metadata": {
+            "target_date": "2025-01-01",
+            "ndvi_date": "2024-12-20",
+            "temporal_offset_days": 12,
+            "no_future_match": true
+          }
+        }
+      },
+      "osm": {
+        "name": "osm",
+        "status": "UNAVAILABLE",
+        "details": {
+          "tiles_completed": 0,
+          "tiles_failed": 1,
+          "artifacts": []
+        }
+      },
+      "pm25": {
+        "name": "pm25",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "OpenAQ v3 requires an API key; set OPENAQ_API_KEY (environment only)."
+        }
+      },
+      "viirs": {
+        "name": "viirs",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": [],
+          "qa": {
+            "flag_band": "Mandatory_Quality_Flag",
+            "keep_quality": [
+              0
+            ]
+          }
+        }
+      },
+      "weather": {
+        "name": "weather",
+        "status": "UNAVAILABLE",
+        "details": {
+          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
+          "tiles_completed": 0,
+          "tiles_failed": 0,
+          "artifacts": []
+        }
+      }
+    },
+    "synthetic_data_leakage": "NONE",
+    "note": "Honest coverage report. Sources are AVAILABLE only when real data was actually acquired; missing credentials are reported UNAVAILABLE and no data is fabricated or substituted."
+  },
+  "synthetic_data_leakage": "NONE",
+  "scope_isolation": {
+    "policy": "requested_scope == artifact_scope; artifacts outside the requested scope are refused.",
+    "verified": "NONE"
+  },
+  "ml_not_implemented": "Global ML training is NOT part of Milestone 16. This manifest describes acquired data only; no predictions are produced."
+}

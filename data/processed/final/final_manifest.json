@@ -1,0 +1,19 @@
+{
+    "target_date": "2025-01-01",
+    "package": "data/processed/final/",
+    "note": "Rasters are not duplicated; canonical paths referenced below.",
+    "outputs": {
+        "pm25_1km_raster": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\pm25_1km_2025-01-01.tif",
+        "pm25_500m_raster": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\pm25_500m_2025-01-01.tif",
+        "aqi_500m_raster": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\aqi_500m_2025-01-01.tif",
+        "aqi_500m_table": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\aqi_500m_predictions.parquet",
+        "hotspots_geojson": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\hotspots_500m.geojson",
+        "hotspot_statistics_json": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\hotspot_statistics.json",
+        "uncertainty_status_json": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\uncertainty_status.json"
+    },
+    "copied_small_files": [
+        "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\final\\hotspots_500m.geojson",
+        "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\final\\hotspot_statistics.json",
+        "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\final\\uncertainty_status.json"
+    ]
+}

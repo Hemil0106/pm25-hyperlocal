@@ -1,0 +1,12 @@
+{
+    "method": "aqi_category",
+    "minimum_category": "VERY_POOR",
+    "hotspot_cell_count": 2576,
+    "hotspot_zone_count": 3,
+    "hotspot_area_km2": 644.0,
+    "mean_pm25_ug_m3": 126.904,
+    "max_pm25_ug_m3": 143.293,
+    "mean_aqi": 305.534,
+    "max_aqi": 318.0,
+    "note": "threshold-based high-pollution zone detection; NOT statistical hotspot analysis and NOT confirmed emission sources"
+}

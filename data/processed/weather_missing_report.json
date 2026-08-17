@@ -1,0 +1,42 @@
+{
+    "convention": "timezone-naive UTC; no values interpolated or fabricated in this stage",
+    "variables": {
+        "temperature": {
+            "isolated_missing_values": 4,
+            "missing_spatial_cells": 0,
+            "missing_entire_days": [],
+            "interpolation_strategy": "not applied yet; short isolated gaps to be handled later by a documented interpolation strategy"
+        },
+        "relative_humidity": {
+            "isolated_missing_values": 145,
+            "missing_spatial_cells": 1,
+            "missing_entire_days": [],
+            "interpolation_strategy": "not applied yet; short isolated gaps to be handled later by a documented interpolation strategy"
+        },
+        "u_wind": {
+            "isolated_missing_values": 0,
+            "missing_spatial_cells": 0,
+            "missing_entire_days": [],
+            "interpolation_strategy": "not applied yet; short isolated gaps to be handled later by a documented interpolation strategy"
+        },
+        "v_wind": {
+            "isolated_missing_values": 0,
+            "missing_spatial_cells": 0,
+            "missing_entire_days": [],
+            "interpolation_strategy": "not applied yet; short isolated gaps to be handled later by a documented interpolation strategy"
+        },
+        "wind_speed": {
+            "isolated_missing_values": 0,
+            "missing_spatial_cells": 0,
+            "missing_entire_days": [],
+            "interpolation_strategy": "not applied yet; short isolated gaps to be handled later by a documented interpolation strategy"
+        },
+        "wind_direction": {
+            "isolated_missing_values": 0,
+            "missing_spatial_cells": 0,
+            "missing_entire_days": [],
+            "interpolation_strategy": "not applied yet; short isolated gaps to be handled later by a documented interpolation strategy"
+        }
+    },
+    "incomplete_dates": []
+}

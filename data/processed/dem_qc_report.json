@@ -1,0 +1,52 @@
+{
+    "source": "NASA_Earthdata_LP_DAAC",
+    "product": "NASA_SRTM_GL1_v003",
+    "input_files": [
+        "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\raw\\dem\\synthetic_dem_sample.tif"
+    ],
+    "output_file": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\elevation.tif",
+    "aoi": {
+        "latitude_range": [
+            28.4,
+            28.8
+        ],
+        "longitude_range": [
+            77.0,
+            77.4
+        ]
+    },
+    "crs": "EPSG:4326",
+    "resolution_deg": [
+        0.001,
+        0.001
+    ],
+    "bounds": {
+        "west": 77.0,
+        "south": 28.400000000000002,
+        "east": 77.4,
+        "north": 28.8
+    },
+    "width": 400,
+    "height": 400,
+    "input_nodata": -32768.0,
+    "output_nodata": null,
+    "resampling_method": "none (native resolution preserved)",
+    "mosaic": {
+        "required": false,
+        "tile_count": 1,
+        "tiles": [
+            "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\raw\\dem\\synthetic_dem_sample.tif"
+        ]
+    },
+    "processing_status": "COMPLETED",
+    "statistics": {
+        "valid_pixel_count": 159692,
+        "nodata_pixel_count": 308,
+        "min_elevation_m": 188.0,
+        "max_elevation_m": 230.0,
+        "mean_elevation_m": 219.05360412597656,
+        "median_elevation_m": 222.0,
+        "std_elevation_m": 7.78755521774292,
+        "suspicious_values_outside_sanity_band": 0
+    }
+}

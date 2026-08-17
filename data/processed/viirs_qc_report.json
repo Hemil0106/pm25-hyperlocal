@@ -1,0 +1,54 @@
+{
+    "source": "NASA_LAADS_DAAC",
+    "product": "NASA_VIIRS_VNP46A2_v2.0",
+    "units": "nW/cm2/sr",
+    "scale_factor": 1.0,
+    "temporal_resolution": "daily",
+    "observation_date": "2025-01-01",
+    "input_file": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\raw\\viirs\\viirs_input.tif",
+    "output_file": "C:\\Users\\HEMIL PATLE\\Documents\\Air Quality Map\\pm25-hyperlocal\\data\\processed\\night_lights.tif",
+    "aoi": {
+        "latitude_range": [
+            28.4,
+            28.8
+        ],
+        "longitude_range": [
+            77.0,
+            77.4
+        ]
+    },
+    "crs": "EPSG:4326",
+    "resolution_deg": [
+        0.0041667,
+        0.0041667
+    ],
+    "bounds": {
+        "west": 77.0,
+        "south": 28.3999968,
+        "east": 77.4000032,
+        "north": 28.8
+    },
+    "width": 96,
+    "height": 96,
+    "fill_value": -999.9,
+    "no_data_representation": "NaN",
+    "quality_filter_policy": "VNP46A2 Mandatory_Quality_Flag: keep 0 (high quality); reject 1-5 (poor, solar-zenith, lunar-eclipse, aurora, glint) and fill; radiance fill value removed before scaling.",
+    "processing_status": "COMPLETED",
+    "statistics": {
+        "total_pixels": 9216,
+        "qa_filtering": {
+            "quality_0_high quality": 9008,
+            "quality_1_poor quality": 100,
+            "quality_5_glint": 48,
+            "quality_255_fill": 60
+        },
+        "fill_value_pixels": 60,
+        "invalid_pixels": 208,
+        "invalid_negative_radiance": 0,
+        "valid_pixels": 9008,
+        "nodata_pixels": 208,
+        "min_valid_radiance": 0.00028861191822215915,
+        "max_valid_radiance": 57.32487487792969,
+        "mean_valid_radiance": 7.700652867922518
+    }
+}

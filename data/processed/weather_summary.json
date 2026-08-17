@@ -1,0 +1,62 @@
+{
+    "source": "ERA5-Land",
+    "date_range": [
+        "2025-01-01",
+        "2025-01-07"
+    ],
+    "n_days": 7,
+    "spatial_cells": 16,
+    "daily_records": 7,
+    "variables": [
+        "temperature",
+        "relative_humidity",
+        "u_wind",
+        "v_wind",
+        "wind_speed",
+        "wind_direction"
+    ],
+    "temperature_statistics": {
+        "min": 17.326425366426395,
+        "max": 24.6202119764136,
+        "mean": 18.662480535400693,
+        "std": 2.030079635330355
+    },
+    "relative_humidity_statistics": {
+        "min": 68.61845909729924,
+        "max": 87.51724192762158,
+        "mean": 71.81666294974784,
+        "std": 4.6493511965495715
+    },
+    "wind_speed_statistics": {
+        "min": 1.0282009384655026,
+        "max": 2.9469771051712548,
+        "mean": 2.588211701293684,
+        "std": 0.33317152147628676
+    },
+    "u_wind_statistics": {
+        "min": 1.028137239156679,
+        "max": 2.753037921134869,
+        "mean": 2.4172647580748756,
+        "std": 0.29702557872216
+    },
+    "v_wind_statistics": {
+        "min": -0.2953357845527048,
+        "max": 1.1233784589043763,
+        "mean": 0.8980728672108438,
+        "std": 0.26816989683788184
+    },
+    "wind_direction_statistics": {
+        "min": 245.2627450921324,
+        "max": 278.36466939226307,
+        "mean": 249.9874598080344,
+        "std": 5.421105503664729
+    },
+    "missing_value_statistics": {
+        "temperature": 0,
+        "relative_humidity": 7,
+        "u_wind": 0,
+        "v_wind": 0,
+        "wind_speed": 0,
+        "wind_direction": 0
+    }
+}

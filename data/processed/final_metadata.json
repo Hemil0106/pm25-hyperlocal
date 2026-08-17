@@ -1,0 +1,70 @@
+{
+    "project": "PM2.5 Hyperlocal Mapping",
+    "target_date": "2025-01-01",
+    "study_area": "Delhi Prototype",
+    "CRS": "EPSG:32643 (WGS84 / UTM zone 43N)",
+    "parent_resolution_m": 1000,
+    "target_resolution_m": 500,
+    "PM2.5": {
+        "model": "XGBoost",
+        "dataset_mode": "fallback",
+        "AOD_used": false
+    },
+    "Downscaling": {
+        "method": "residual refinement (architecture); this run baseline prototype / parent-constant",
+        "residual_model_status": "NOT TRAINED (16 residual samples, minimum 20)",
+        "consistency_method": "area_weighted_mean"
+    },
+    "AQI": {
+        "methodology": "CPCB_NATIONAL_AQI",
+        "pollutant": "PM2.5",
+        "averaging_period": "24h",
+        "AQI_type": "PM2.5-derived AQI / PM2.5 AQI sub-index (NOT full multi-pollutant National AQI)",
+        "category_definition": [
+            {
+                "name": "GOOD",
+                "aqi_range": "0-50"
+            },
+            {
+                "name": "SATISFACTORY",
+                "aqi_range": "51-100"
+            },
+            {
+                "name": "MODERATELY_POLLUTED",
+                "aqi_range": "101-200"
+            },
+            {
+                "name": "POOR",
+                "aqi_range": "201-300"
+            },
+            {
+                "name": "VERY_POOR",
+                "aqi_range": "301-400"
+            },
+            {
+                "name": "SEVERE",
+                "aqi_range": "401-500"
+            }
+        ]
+    },
+    "Hotspot": {
+        "method": "aqi_category",
+        "minimum_category": "VERY_POOR",
+        "note": "predicted high-pollution zones; NOT confirmed emission sources"
+    },
+    "Uncertainty": {
+        "status": "DEFERRED",
+        "method": "none"
+    },
+    "Data limitations": {
+        "training_rows": 16,
+        "stations": 4,
+        "AOD_availability": "unavailable",
+        "downscaling_training_status": "insufficient (16 < 20)",
+        "model_performance": "provisional / pipeline validation only",
+        "500m_output": "baseline prototype; higher resolution does NOT imply higher accuracy"
+    },
+    "valid_500m_cells": 3264,
+    "hotspot_cell_count": 2576,
+    "hotspot_zone_count": 3
+}
