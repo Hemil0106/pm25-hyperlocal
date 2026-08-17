@@ -8,8 +8,13 @@ dashboard/build/
 __pycache__/
 *.pyc
 .pytest_cache/
-data/raw/**
-!data/raw/aoi.geojson
+data/raw/dem/
+data/raw/weather/
+data/raw/ndvi/
+data/raw/viirs/
+data/raw/osm/
+data/raw/cpcb/
+data/raw/global/
 models/
 logs/
 *.log
