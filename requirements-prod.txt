@@ -80,3 +80,4 @@ ecmwf-datastores-client==0.5.3
 multiurl==0.3.9
 h5py==3.16.0
 s3fs==2026.7.0
+pyarrow==25.0.1
