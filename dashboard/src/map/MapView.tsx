@@ -357,11 +357,36 @@ export function MapView({
     });
   }, [selectedRegion]);
 
+  const rastersRef = useRef(rasters);
+  const visibilityRef = useRef(visibility);
+  const hotspotsRef = useRef(hotspots);
+  const stationsRef = useRef(stations);
+  useEffect(() => { rastersRef.current = rasters; });
+  useEffect(() => { visibilityRef.current = visibility; });
+  useEffect(() => { hotspotsRef.current = hotspots; });
+  useEffect(() => { stationsRef.current = stations; });
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const target = mapTheme === "light" ? LIGHT_STYLE : DARK_STYLE;
     map.setStyle(target);
+    map.once("style.load", () => {
+      const cur = rastersRef.current;
+      if (cur.pm25) addImageLayer(map, "pm25", { data: cur.pm25, opacity: 0.8 });
+      if (cur.pm25_1km) addImageLayer(map, "pm25_1km", { data: cur.pm25_1km, opacity: 0.8 });
+      if (cur.aqi) addImageLayer(map, "aqi", { data: cur.aqi, opacity: 0.8 });
+      if (cur.aod) addImageLayer(map, "aod", { data: cur.aod, opacity: 0.75 });
+      if (hotspotsRef.current) addHotspotLayer(map, "hotspots", hotspotsRef.current);
+      if (stationsRef.current) addStationsLayer(map, "stations", stationsRef.current);
+      const vis = visibilityRef.current;
+      setLayerVisible(map, "pm25", vis.pm25);
+      setLayerVisible(map, "pm25_1km", vis.pm25_1km);
+      setLayerVisible(map, "aqi", vis.aqi);
+      setLayerVisible(map, "aod", vis.aod);
+      setLayerVisible(map, "hotspots", vis.hotspots);
+      setLayerVisible(map, "stations", vis.stations);
+    });
   }, [mapTheme]);
 
   useEffect(() => {
