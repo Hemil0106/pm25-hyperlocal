@@ -31,7 +31,7 @@ export function GlobalStatusPanel({
   const canPredict = outputMetadata?.inference?.can_predict ?? false;
   const rasterAvailable = hasRasterData || (outputMetadata?.inference?.has_raster_data ?? false);
   const scopeStatus =
-    aoi?.model_scope?.status === "available"
+    aoi?.model_scope?.status === "available" || rasterAvailable
       ? "available"
       : aoi?.model_scope?.status === "unavailable_for_aoi"
         ? "unavailable"
@@ -69,7 +69,7 @@ export function GlobalStatusPanel({
             <div>
               <span className="loc-label">Model scope</span>
               <span className="loc-value">
-                {aoi?.model_scope?.id ?? "—"}
+                {rasterAvailable ? "Raster data" : (aoi?.model_scope?.id ?? "—")}
                 {scopeStatus === "available" && (
                   <span className="status-dot status-ok" title="Available" />
                 )}
