@@ -239,6 +239,8 @@ api:
     - "http://localhost:5173"
     - "http://localhost:3000"
     - "http://127.0.0.1:5173"
+    - "https://pm25-hyperlocal-tau.vercel.app"
+    - "https://pm25-hyperlocal.netlify.app"
   default_resolution: "500m"
 
 training_data:
