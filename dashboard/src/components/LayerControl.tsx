@@ -11,6 +11,7 @@ const LAYER_ITEMS: { id: keyof LayerVisibility; label: string }[] = [
   { id: "pm25", label: "PM2.5 — 500 m" },
   { id: "pm25_1km", label: "PM2.5 — 1 km comparison" },
   { id: "aqi", label: "PM2.5-derived AQI" },
+  { id: "aod", label: "MODIS / MAIAC AOD" },
   { id: "hotspots", label: "High-pollution zones" },
   { id: "stations", label: "CPCB stations" },
 ];

@@ -55,6 +55,7 @@ MODEL_DIR = PROJECT_ROOT / "models"
 PM25_500M_PATTERN = "pm25_500m_{date}.tif"
 PM25_1KM_PATTERN = "pm25_1km_{date}.tif"
 AQI_500M_PATTERN = "aqi_500m_{date}.tif"
+AOD_500M_PATTERN = "aod_500m_{date}.tif"
 
 RESOLUTION_MAP = {"500": 500, "1000": 1000}
 DEFAULT_RESOLUTION_M = 500
@@ -580,6 +581,12 @@ def serve_pm25_raster(date: date, resolution: str = "500m", city: str | None = Q
 @app.get("/raster/aqi", tags=["raster"])
 def serve_aqi_raster(date: date, city: str | None = Query(None)):
     path = _check_date_available(date, AQI_500M_PATTERN, city)
+    return FileResponse(path, media_type="image/tiff")
+
+
+@app.get("/raster/aod", tags=["raster"])
+def serve_aod_raster(date: date, city: str | None = Query(None)):
+    path = _check_date_available(date, AOD_500M_PATTERN, city)
     return FileResponse(path, media_type="image/tiff")
 
 

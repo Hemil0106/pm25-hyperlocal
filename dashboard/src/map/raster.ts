@@ -1,6 +1,6 @@
 import { fromUrl } from "geotiff";
 import proj4 from "proj4";
-import { binColor, PM25_BINS, CPCB_CATEGORIES } from "../colormaps";
+import { binColor, PM25_BINS, CPCB_CATEGORIES, AOD_BINS } from "../colormaps";
 import type { MapQuadCoordinates, RasterLayerData } from "../types";
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -18,9 +18,9 @@ function colorizeCanvas(
   data: ArrayLike<number>,
   width: number,
   height: number,
-  kind: "pm25" | "aqi",
+  kind: "pm25" | "aqi" | "aod",
 ): { canvas: HTMLCanvasElement; valueRange: { min: number; max: number } | null } {
-  const bins = kind === "pm25" ? PM25_BINS : CPCB_CATEGORIES;
+  const bins = kind === "pm25" ? PM25_BINS : kind === "aqi" ? CPCB_CATEGORIES : AOD_BINS;
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -77,7 +77,7 @@ function projectedCrs(image: { geoKeys?: () => Record<string, number> }): string
  */
 export async function loadRasterLayer(
   url: string,
-  kind: "pm25" | "aqi",
+  kind: "pm25" | "aqi" | "aod",
 ): Promise<RasterLayerData> {
   const tiff = await fromUrl(url);
   const image = await tiff.getImage();

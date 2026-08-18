@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   getAOIInfo,
   getAQIRasterUrl,
+  getAODRasterUrl,
   getAvailableDates,
   getDataAvailability,
   getFeatureImportance,
@@ -58,12 +59,14 @@ const DEFAULT_VISIBILITY: LayerVisibility = {
   hotspots: true,
   stations: true,
   pm25_1km: false,
+  aod: false,
 };
 
 interface RasterState {
   pm25: RasterLayerData | null;
   pm25_1km: RasterLayerData | null;
   aqi: RasterLayerData | null;
+  aod: RasterLayerData | null;
 }
 
 function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -118,6 +121,7 @@ export default function App() {
     pm25: null,
     pm25_1km: null,
     aqi: null,
+    aod: null,
   });
   const [rasterError, setRasterError] = useState<string | null>(null);
 
@@ -254,19 +258,21 @@ export default function App() {
     if (!selectedDate) return;
     let cancelled = false;
     setRasterError(null);
-    setRasters({ pm25: null, pm25_1km: null, aqi: null });
+    setRasters({ pm25: null, pm25_1km: null, aqi: null, aod: null });
     (async () => {
       const city = cityParam(selectedRegion);
-      const [pm25Result, pm25_1kmResult, aqiResult] = await Promise.allSettled([
+      const [pm25Result, pm25_1kmResult, aqiResult, aodResult] = await Promise.allSettled([
         loadRasterLayer(getPM25RasterUrl(selectedDate, "500m", city), "pm25"),
         loadRasterLayer(getPM25RasterUrl(selectedDate, "1000m", city), "pm25"),
         loadRasterLayer(getAQIRasterUrl(selectedDate, city), "aqi"),
+        loadRasterLayer(getAODRasterUrl(selectedDate, city), "aod"),
       ]);
       if (cancelled) return;
       setRasters({
         pm25: pm25Result.status === "fulfilled" ? pm25Result.value : null,
         pm25_1km: pm25_1kmResult.status === "fulfilled" ? pm25_1kmResult.value : null,
         aqi: aqiResult.status === "fulfilled" ? aqiResult.value : null,
+        aod: aodResult.status === "fulfilled" ? aodResult.value : null,
       });
       if (
         pm25Result.status === "rejected" &&
@@ -354,7 +360,7 @@ export default function App() {
     setSelectedHotspot(null);
     setSelectedStation(null);
     setStationDetail(null);
-    setRasters({ pm25: null, pm25_1km: null, aqi: null });
+    setRasters({ pm25: null, pm25_1km: null, aqi: null, aod: null });
     setMetadata(null);
     setStations(null);
     setFeatureImportance(null);

@@ -160,7 +160,7 @@ export interface ApiError extends Error {
   status?: number;
 }
 
-export type LayerId = "pm25" | "aqi" | "hotspots" | "stations" | "pm25_1km";
+export type LayerId = "pm25" | "aqi" | "hotspots" | "stations" | "pm25_1km" | "aod";
 
 export interface LayerVisibility {
   pm25: boolean;
@@ -168,6 +168,7 @@ export interface LayerVisibility {
   hotspots: boolean;
   stations: boolean;
   pm25_1km: boolean;
+  aod: boolean;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,10 +1,11 @@
-import { AQI_LEGEND, PM25_LEGEND, binLabel } from "../colormaps";
+import { AQI_LEGEND, PM25_LEGEND, AOD_LEGEND, binLabel } from "../colormaps";
 import type { LayerVisibility } from "../types";
 
 export function Legend({ visibility }: { visibility: LayerVisibility }) {
   const showAqi = visibility.aqi;
   const showPm25 = visibility.pm25 || visibility.pm25_1km;
-  if (!showAqi && !showPm25) {
+  const showAod = visibility.aod;
+  if (!showAqi && !showPm25 && !showAod) {
     return null;
   }
   return (
@@ -28,6 +29,17 @@ export function Legend({ visibility }: { visibility: LayerVisibility }) {
             <div className="legend-row" key={category.name}>
               <span className="legend-swatch" style={{ background: category.color }} />
               <span>{category.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {showAod && (
+        <div className="legend-block">
+          <div className="legend-title">Aerosol Optical Depth (AOD)</div>
+          {AOD_LEGEND.map((bin) => (
+            <div className="legend-row" key={`aod-${bin.min}-${bin.max}`}>
+              <span className="legend-swatch" style={{ background: bin.color }} />
+              <span>{bin.min.toFixed(1)} – {bin.max.toFixed(1)}</span>
             </div>
           ))}
         </div>

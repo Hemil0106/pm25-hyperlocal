@@ -125,6 +125,11 @@ export const getAQIRasterUrl = (date: string, city?: string) => {
   return `${API_BASE_URL}/raster/aqi?${params}`;
 };
 
+export const getAODRasterUrl = (date: string, city?: string) => {
+  const params = `date=${date}${city ? `&city=${encodeURIComponent(city)}` : ""}`;
+  return `${API_BASE_URL}/raster/aod?${params}`;
+};
+
 export const getRegions = () => request<RegionCatalogResponse>("/global/regions");
 
 export const getModelScopes = () => request<ModelScopesResponse>("/global/model-scopes");

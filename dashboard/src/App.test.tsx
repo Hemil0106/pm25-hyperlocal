@@ -31,6 +31,7 @@ vi.mock("./api", () => ({
   getGlobalDataStatus: vi.fn(),
   getPM25RasterUrl: vi.fn((_date: string, resolution: string) => `/raster/pm25?resolution=${resolution}`),
   getAQIRasterUrl: vi.fn(() => "/raster/aqi"),
+  getAODRasterUrl: vi.fn(() => "/raster/aod"),
 }));
 
 vi.mock("./map/raster", () => ({

@@ -20,6 +20,7 @@ interface RasterInput {
   pm25: RasterLayerData | null;
   pm25_1km: RasterLayerData | null;
   aqi: RasterLayerData | null;
+  aod: RasterLayerData | null;
 }
 
 interface Bounds {
@@ -166,11 +167,21 @@ export function MapView({
 
   useEffect(() => {
     const map = mapRef.current;
+    if (!map || !rasters.aod) return;
+    whenReady(map, () =>
+      addImageLayer(map, "aod", { data: rasters.aod!, opacity: 0.75 }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rasters.aod]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     if (!map) return;
     whenReady(map, () => {
       setLayerVisible(map, "pm25", visibility.pm25);
       setLayerVisible(map, "pm25_1km", visibility.pm25_1km);
       setLayerVisible(map, "aqi", visibility.aqi);
+      setLayerVisible(map, "aod", visibility.aod);
       setLayerVisible(map, "hotspots", visibility.hotspots);
       setLayerVisible(map, "stations", visibility.stations);
     });
