@@ -69,7 +69,12 @@ interface RasterState {
   aod: RasterLayerData | null;
 }
 
-function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function distanceKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const earthKm = 6371;
   const dLat = toRad(lat2 - lat1);
@@ -80,41 +85,54 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): num
   return 2 * earthKm * Math.asin(Math.sqrt(a));
 }
 
-/** Map an M15 region id to the M16 acquisition scope (delhi | pune | mumbai). */
 function scopeForRegion(region: string): string {
-  if (region === "delhi" || region === "pune" || region === "mumbai") return region;
+  if (region === "delhi" || region === "pune" || region === "mumbai")
+    return region;
   return "delhi";
 }
 
-/** Map region id to the backend city param (None for delhi, which is the default). */
 function cityParam(region: string): string | undefined {
   if (region === "delhi") return undefined;
   return region;
 }
 
+type SidebarTab = "overview" | "model" | "system";
+
 export default function App() {
-  const [apiStatus, setApiStatus] = useState<"loading" | "ok" | "unavailable">("loading");
+  const [apiStatus, setApiStatus] = useState<
+    "loading" | "ok" | "unavailable"
+  >("loading");
   const [dates, setDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
-  const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null);
+  const [metadata, setMetadata] = useState<Record<string, unknown> | null>(
+    null,
+  );
   const [stations, setStations] = useState<Station[] | null>(null);
   const [hotspots, setHotspots] = useState<HotspotCollection | null>(null);
-  const [statistics, setStatistics] = useState<HotspotStatisticsResponse | null>(null);
+  const [statistics, setStatistics] =
+    useState<HotspotStatisticsResponse | null>(null);
   const [featureImportance, setFeatureImportance] =
     useState<FeatureImportanceResponse | null>(null);
-  const [uncertainty, setUncertainty] = useState<UncertaintyResponse | null>(null);
+  const [uncertainty, setUncertainty] =
+    useState<UncertaintyResponse | null>(null);
 
-  const [regions, setRegions] = useState<Record<string, RegionInfo> | null>(null);
+  const [regions, setRegions] = useState<
+    Record<string, RegionInfo> | null
+  >(null);
   const [selectedRegion, setSelectedRegion] = useState("delhi");
   const [scopes, setScopes] = useState<ModelScopesResponse | null>(null);
-  const [availability, setAvailability] = useState<DataAvailabilityResponse | null>(null);
-  const [outputMetadata, setOutputMetadata] = useState<OutputMetadataResponse | null>(null);
+  const [availability, setAvailability] =
+    useState<DataAvailabilityResponse | null>(null);
+  const [outputMetadata, setOutputMetadata] =
+    useState<OutputMetadataResponse | null>(null);
   const [aoiInfo, setAoiInfo] = useState<AOIInfoResponse | null>(null);
   const [globalStatusLoading, setGlobalStatusLoading] = useState(true);
-  const [globalDataStatus, setGlobalDataStatus] = useState<GlobalDataStatusResponse | null>(null);
+  const [globalDataStatus, setGlobalDataStatus] =
+    useState<GlobalDataStatusResponse | null>(null);
   const [globalDataLoading, setGlobalDataLoading] = useState(true);
 
-  const [visibility, setVisibility] = useState<LayerVisibility>(DEFAULT_VISIBILITY);
+  const [visibility, setVisibility] =
+    useState<LayerVisibility>(DEFAULT_VISIBILITY);
   const [resolution, setResolution] = useState<"500m" | "1000m">("500m");
   const [pm25Opacity, setPm25Opacity] = useState(0.8);
   const [rasters, setRasters] = useState<RasterState>({
@@ -133,12 +151,15 @@ export default function App() {
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  const [selectedHotspot, setSelectedHotspot] = useState<HotspotProperties | null>(null);
+  const [selectedHotspot, setSelectedHotspot] =
+    useState<HotspotProperties | null>(null);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
-  const [stationDetail, setStationDetail] = useState<StationDetail | null>(null);
+  const [stationDetail, setStationDetail] =
+    useState<StationDetail | null>(null);
 
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>("overview");
 
   useEffect(() => {
     let cancelled = false;
@@ -150,7 +171,9 @@ export default function App() {
         if (cancelled) return;
       }
       try {
-        const { dates: found } = await getAvailableDates(cityParam(selectedRegion));
+        const { dates: found } = await getAvailableDates(
+          cityParam(selectedRegion),
+        );
         if (cancelled) return;
         setDates(found);
         if (found.length > 0) setSelectedDate(found[0]);
@@ -172,7 +195,8 @@ export default function App() {
         getModelScopes(),
       ]);
       if (cancelled) return;
-      if (regionList.status === "fulfilled") setRegions(regionList.value.regions);
+      if (regionList.status === "fulfilled")
+        setRegions(regionList.value.regions);
       if (scopeList.status === "fulfilled") setScopes(scopeList.value);
     })();
     return () => {
@@ -190,8 +214,10 @@ export default function App() {
         getAOIInfo(selectedRegion),
       ]);
       if (cancelled) return;
-      if (availResult.status === "fulfilled") setAvailability(availResult.value);
-      if (metaResult.status === "fulfilled") setOutputMetadata(metaResult.value);
+      if (availResult.status === "fulfilled")
+        setAvailability(availResult.value);
+      if (metaResult.status === "fulfilled")
+        setOutputMetadata(metaResult.value);
       if (aoiResult.status === "fulfilled") setAoiInfo(aoiResult.value);
       setGlobalStatusLoading(false);
     })();
@@ -205,7 +231,9 @@ export default function App() {
     setGlobalDataLoading(true);
     setGlobalDataStatus(null);
     (async () => {
-      const result = await getGlobalDataStatus(scopeForRegion(selectedRegion));
+      const result = await getGlobalDataStatus(
+        scopeForRegion(selectedRegion),
+      );
       if (cancelled) return;
       setGlobalDataStatus(result);
       setGlobalDataLoading(false);
@@ -219,17 +247,21 @@ export default function App() {
     let cancelled = false;
     (async () => {
       const city = cityParam(selectedRegion);
-      const [meta, stationList, importance, uncertaintyData] = await Promise.allSettled([
-        getMetadata(city),
-        getStations(city),
-        getFeatureImportance(city),
-        getUncertainty(city),
-      ]);
+      const [meta, stationList, importance, uncertaintyData] =
+        await Promise.allSettled([
+          getMetadata(city),
+          getStations(city),
+          getFeatureImportance(city),
+          getUncertainty(city),
+        ]);
       if (cancelled) return;
       if (meta.status === "fulfilled") setMetadata(meta.value);
-      if (stationList.status === "fulfilled") setStations(stationList.value);
-      if (importance.status === "fulfilled") setFeatureImportance(importance.value);
-      if (uncertaintyData.status === "fulfilled") setUncertainty(uncertaintyData.value);
+      if (stationList.status === "fulfilled")
+        setStations(stationList.value);
+      if (importance.status === "fulfilled")
+        setFeatureImportance(importance.value);
+      if (uncertaintyData.status === "fulfilled")
+        setUncertainty(uncertaintyData.value);
     })();
     return () => {
       cancelled = true;
@@ -246,7 +278,8 @@ export default function App() {
         getHotspotStatistics(city),
       ]);
       if (cancelled) return;
-      if (hotspotData.status === "fulfilled") setHotspots(hotspotData.value);
+      if (hotspotData.status === "fulfilled")
+        setHotspots(hotspotData.value);
       if (statsData.status === "fulfilled") setStatistics(statsData.value);
     })();
     return () => {
@@ -261,16 +294,27 @@ export default function App() {
     setRasters({ pm25: null, pm25_1km: null, aqi: null, aod: null });
     (async () => {
       const city = cityParam(selectedRegion);
-      const [pm25Result, pm25_1kmResult, aqiResult, aodResult] = await Promise.allSettled([
-        loadRasterLayer(getPM25RasterUrl(selectedDate, "500m", city), "pm25"),
-        loadRasterLayer(getPM25RasterUrl(selectedDate, "1000m", city), "pm25"),
-        loadRasterLayer(getAQIRasterUrl(selectedDate, city), "aqi"),
-        loadRasterLayer(getAODRasterUrl(selectedDate, city), "aod"),
-      ]);
+      const [pm25Result, pm25_1kmResult, aqiResult, aodResult] =
+        await Promise.allSettled([
+          loadRasterLayer(
+            getPM25RasterUrl(selectedDate, "500m", city),
+            "pm25",
+          ),
+          loadRasterLayer(
+            getPM25RasterUrl(selectedDate, "1000m", city),
+            "pm25",
+          ),
+          loadRasterLayer(getAQIRasterUrl(selectedDate, city), "aqi"),
+          loadRasterLayer(getAODRasterUrl(selectedDate, city), "aod"),
+        ]);
       if (cancelled) return;
       setRasters({
-        pm25: pm25Result.status === "fulfilled" ? pm25Result.value : null,
-        pm25_1km: pm25_1kmResult.status === "fulfilled" ? pm25_1kmResult.value : null,
+        pm25:
+          pm25Result.status === "fulfilled" ? pm25Result.value : null,
+        pm25_1km:
+          pm25_1kmResult.status === "fulfilled"
+            ? pm25_1kmResult.value
+            : null,
         aqi: aqiResult.status === "fulfilled" ? aqiResult.value : null,
         aod: aodResult.status === "fulfilled" ? aodResult.value : null,
       });
@@ -296,7 +340,12 @@ export default function App() {
     setSelectedStation(null);
     setStationDetail(null);
     try {
-      const result = await getLocation(selectedDate, latitude, longitude, cityParam(selectedRegion));
+      const result = await getLocation(
+        selectedDate,
+        latitude,
+        longitude,
+        cityParam(selectedRegion),
+      );
       setLocation(result);
     } catch (error) {
       setLocation(null);
@@ -320,7 +369,10 @@ export default function App() {
     setLocation(null);
     setSelectedHotspot(null);
     try {
-      const detail = await getStationDetail(station.station_id, cityParam(selectedRegion));
+      const detail = await getStationDetail(
+        station.station_id,
+        cityParam(selectedRegion),
+      );
       setStationDetail(detail);
     } catch {
       setStationDetail(null);
@@ -328,7 +380,10 @@ export default function App() {
   }
 
   function handleLayerToggle(layer: keyof LayerVisibility) {
-    setVisibility((current) => ({ ...current, [layer]: !current[layer] }));
+    setVisibility((current) => ({
+      ...current,
+      [layer]: !current[layer],
+    }));
   }
 
   function handleResolutionChange(next: "500m" | "1000m") {
@@ -360,7 +415,12 @@ export default function App() {
     setSelectedHotspot(null);
     setSelectedStation(null);
     setStationDetail(null);
-    setRasters({ pm25: null, pm25_1km: null, aqi: null, aod: null });
+    setRasters({
+      pm25: null,
+      pm25_1km: null,
+      aqi: null,
+      aod: null,
+    });
     setMetadata(null);
     setStations(null);
     setFeatureImportance(null);
@@ -396,16 +456,26 @@ export default function App() {
       })
     : null;
   const model = metadataPm25?.model ?? null;
-  const canPredict = outputMetadata?.inference?.can_predict ?? true;
-  const hasRasterData = rasters.pm25 !== null || rasters.pm25_1km !== null || rasters.aqi !== null;
-  const regionScopeStatus = aoiInfo?.model_scope?.status === "available" ? "available" : "unavailable";
+  const canPredict =
+    outputMetadata?.inference?.can_predict ?? true;
+  const hasRasterData =
+    rasters.pm25 !== null ||
+    rasters.pm25_1km !== null ||
+    rasters.aqi !== null;
+  const regionScopeStatus =
+    aoiInfo?.model_scope?.status === "available"
+      ? "available"
+      : "unavailable";
   const regionBounds =
     aoiInfo?.bounds ??
     regions?.[selectedRegion]?.bounds ??
     (regions && "delhi" in regions ? regions.delhi.bounds : null);
   const nonDelhiRegion = selectedRegion !== "delhi" && regions != null;
   const mapLoading =
-    !rasterError && rasters.pm25 === null && rasters.pm25_1km === null && rasters.aqi === null;
+    !rasterError &&
+    rasters.pm25 === null &&
+    rasters.pm25_1km === null &&
+    rasters.aqi === null;
 
   return (
     <div className="app">
@@ -428,7 +498,9 @@ export default function App() {
       <MetricCards
         location={location}
         locationLoading={locationLoading}
-        hasSelection={selectedLocation != null && selectedStation == null}
+        hasSelection={
+          selectedLocation != null && selectedStation == null
+        }
         hotspotCount={statistics?.hotspot_zone_count ?? null}
         resolution={resolution === "500m" ? "500 m" : "1 km"}
         model={model ?? "XGBoost"}
@@ -436,19 +508,22 @@ export default function App() {
 
       {!canPredict && !hasRasterData && outputMetadata !== null && (
         <div className="api-banner" role="alert">
-          Prediction unavailable for the {outputMetadata.aoi.name} AOI — no validated
-          model trained on observations for this scope exists. The Delhi prototype is
-          not applied outside Delhi.
+          Prediction unavailable for the {outputMetadata.aoi.name} AOI —
+          no validated model trained on observations for this scope
+          exists. The Delhi prototype is not applied outside Delhi.
         </div>
       )}
 
       {apiStatus === "unavailable" && (
         <div className="api-banner" role="alert">
-          Backend unavailable — start the FastAPI server to load live project data.
+          Backend unavailable — start the FastAPI server to load live
+          project data.
         </div>
       )}
 
-      <main className={`main-grid${rightPanelOpen ? "" : " right-closed"}`}>
+      <main
+        className={`main-grid${rightPanelOpen ? "" : " right-closed"}`}
+      >
         <section className="map-col" aria-label="Interactive map">
           <div className="map-shell">
             <MapView
@@ -457,7 +532,9 @@ export default function App() {
               hotspots={hotspots}
               stations={stations}
               bounds={rasters.pm25?.bounds ?? null}
-              regionBounds={nonDelhiRegion ? regionBounds : null}
+              regionBounds={
+                nonDelhiRegion ? regionBounds : null
+              }
               selectedRegion={selectedRegion}
               selectedLocation={selectedLocation}
               pm25Opacity={pm25Opacity}
@@ -468,8 +545,11 @@ export default function App() {
             {nonDelhiRegion && !canPredict && !hasRasterData && (
               <div className="map-error">
                 <ErrorBox>
-                  Global PM2.5 map unavailable for the {regions?.[selectedRegion]?.name ?? selectedRegion}{" "}
-                  AOI on this date — no validated model exists for this scope.
+                  Global PM2.5 map unavailable for the{" "}
+                  {regions?.[selectedRegion]?.name ??
+                    selectedRegion}{" "}
+                  AOI on this date — no validated model exists for
+                  this scope.
                 </ErrorBox>
               </div>
             )}
@@ -482,7 +562,12 @@ export default function App() {
               <div className="map-loading" role="status">
                 <span
                   className="skeleton"
-                  style={{ width: 12, height: 12, borderRadius: 999, flex: "0 0 auto" }}
+                  style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 999,
+                    flex: "0 0 auto",
+                  }}
                 />
                 Loading PM2.5 layer…
               </div>
@@ -490,12 +575,18 @@ export default function App() {
             <button
               className="shutter-btn shutter-left"
               onClick={() => setLeftPanelOpen((v) => !v)}
-              title={leftPanelOpen ? "Hide controls" : "Show controls"}
-              aria-label={leftPanelOpen ? "Hide controls" : "Show controls"}
+              title={
+                leftPanelOpen ? "Hide controls" : "Show controls"
+              }
+              aria-label={
+                leftPanelOpen ? "Hide controls" : "Show controls"
+              }
             >
               {leftPanelOpen ? "\u2039" : "\u203A"}
             </button>
-            <div className={`map-floating-controls${leftPanelOpen ? "" : " collapsed"}`}>
+            <div
+              className={`map-floating-controls${leftPanelOpen ? "" : " collapsed"}`}
+            >
               <LayerControl
                 visibility={visibility}
                 onToggle={handleLayerToggle}
@@ -515,101 +606,160 @@ export default function App() {
         <button
           className={`shutter-btn shutter-right${rightPanelOpen ? "" : " shuttle-open"}`}
           onClick={() => setRightPanelOpen((v) => !v)}
-          title={rightPanelOpen ? "Hide panel" : "Show panel"}
-          aria-label={rightPanelOpen ? "Hide panel" : "Show panel"}
+          title={
+            rightPanelOpen ? "Hide panel" : "Show panel"
+          }
+          aria-label={
+            rightPanelOpen ? "Hide panel" : "Show panel"
+          }
         >
           {rightPanelOpen ? "\u203A" : "\u2039"}
         </button>
 
-        <aside className={`side-col${rightPanelOpen ? "" : " collapsed"}`}>
-          <LocationPanel
-            location={location}
-            loading={locationLoading}
-            error={locationError}
-            nearbyStation={nearbyStation}
-            nearbyStationLoading={false}
-          />
+        <aside
+          className={`side-col${rightPanelOpen ? "" : " collapsed"}`}
+        >
+          <nav className="sidebar-tabs" aria-label="Sidebar sections">
+            <button
+              type="button"
+              className={`sidebar-tab${sidebarTab === "overview" ? " active" : ""}`}
+              onClick={() => setSidebarTab("overview")}
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              className={`sidebar-tab${sidebarTab === "model" ? " active" : ""}`}
+              onClick={() => setSidebarTab("model")}
+            >
+              Model & Data
+            </button>
+            <button
+              type="button"
+              className={`sidebar-tab${sidebarTab === "system" ? " active" : ""}`}
+              onClick={() => setSidebarTab("system")}
+            >
+              System
+            </button>
+          </nav>
 
-          {selectedHotspot && (
-            <Panel title="Selected hotspot">
-              <div className="kv-grid">
-                <div>
-                  <span className="loc-label">Hotspot ID</span>
-                  <span className="loc-value">{selectedHotspot.hotspot_id}</span>
-                </div>
-                <div>
-                  <span className="loc-label">Area</span>
-                  <span className="loc-value">
-                    {selectedHotspot.area_km2 != null
-                      ? `${selectedHotspot.area_km2.toFixed(1)} km²`
-                      : "—"}
-                  </span>
-                </div>
-                <div>
-                  <span className="loc-label">Date</span>
-                  <span className="loc-value">{String(selectedHotspot.date).slice(0, 10)}</span>
-                </div>
-              </div>
-              <p className="body-text muted">
-                Predicted high-pollution zone — not a confirmed emission source.
-              </p>
-            </Panel>
+          {sidebarTab === "overview" && (
+            <div className="sidebar-panel-group">
+              <LocationPanel
+                location={location}
+                loading={locationLoading}
+                error={locationError}
+                nearbyStation={nearbyStation}
+                nearbyStationLoading={false}
+              />
+
+              {selectedHotspot && (
+                <Panel title="Selected hotspot">
+                  <div className="kv-grid">
+                    <div>
+                      <span className="loc-label">Hotspot ID</span>
+                      <span className="loc-value">
+                        {selectedHotspot.hotspot_id}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="loc-label">Area</span>
+                      <span className="loc-value">
+                        {selectedHotspot.area_km2 != null
+                          ? `${selectedHotspot.area_km2.toFixed(1)} km²`
+                          : "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="loc-label">Date</span>
+                      <span className="loc-value">
+                        {String(selectedHotspot.date).slice(0, 10)}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="body-text muted">
+                    Predicted high-pollution zone — not a confirmed
+                    emission source.
+                  </p>
+                </Panel>
+              )}
+
+              {selectedStation && (
+                <Panel title="Selected station">
+                  <div className="kv-grid">
+                    <div>
+                      <span className="loc-label">Station ID</span>
+                      <span className="loc-value">
+                        {selectedStation.station_id}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="loc-label">Latitude</span>
+                      <span className="loc-value">
+                        {selectedStation.latitude.toFixed(4)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="loc-label">Longitude</span>
+                      <span className="loc-value">
+                        {selectedStation.longitude.toFixed(4)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="loc-label">Latest PM2.5</span>
+                      <span className="loc-value">
+                        {selectedStation.latest_pm25 != null
+                          ? `${selectedStation.latest_pm25.toFixed(1)} µg/m³`
+                          : "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="loc-label">
+                        Available dates
+                      </span>
+                      <span className="loc-value">
+                        {stationDetail
+                          ? stationDetail.available_dates.length
+                          : "…"}
+                      </span>
+                    </div>
+                  </div>
+                </Panel>
+              )}
+
+              <HotspotSummary stats={statistics} />
+            </div>
           )}
 
-          {selectedStation && (
-            <Panel title="Selected station">
-              <div className="kv-grid">
-                <div>
-                  <span className="loc-label">Station ID</span>
-                  <span className="loc-value">{selectedStation.station_id}</span>
-                </div>
-                <div>
-                  <span className="loc-label">Latitude</span>
-                  <span className="loc-value">{selectedStation.latitude.toFixed(4)}</span>
-                </div>
-                <div>
-                  <span className="loc-label">Longitude</span>
-                  <span className="loc-value">{selectedStation.longitude.toFixed(4)}</span>
-                </div>
-                <div>
-                  <span className="loc-label">Latest PM2.5</span>
-                  <span className="loc-value">
-                    {selectedStation.latest_pm25 != null
-                      ? `${selectedStation.latest_pm25.toFixed(1)} µg/m³`
-                      : "—"}
-                  </span>
-                </div>
-                <div>
-                  <span className="loc-label">Available dates</span>
-                  <span className="loc-value">
-                    {stationDetail ? stationDetail.available_dates.length : "…"}
-                  </span>
-                </div>
-              </div>
-            </Panel>
+          {sidebarTab === "model" && (
+            <div className="sidebar-panel-group">
+              <GlobalStatusPanel
+                availability={availability}
+                scopes={scopes}
+                outputMetadata={outputMetadata}
+                aoi={aoiInfo}
+                loading={globalStatusLoading}
+                globalDataStatus={globalDataStatus}
+                globalDataLoading={globalDataLoading}
+                hasRasterData={hasRasterData}
+              />
+              <ModelInfoPanel
+                metadata={metadata}
+                featureImportance={featureImportance}
+                uncertainty={uncertainty}
+              />
+            </div>
           )}
 
-          <HotspotSummary stats={statistics} />
-          <GlobalStatusPanel
-            availability={availability}
-            scopes={scopes}
-            outputMetadata={outputMetadata}
-            aoi={aoiInfo}
-            loading={globalStatusLoading}
-            globalDataStatus={globalDataStatus}
-            globalDataLoading={globalDataLoading}
-            hasRasterData={hasRasterData}
-          />
-          <ModelInfoPanel
-            metadata={metadata}
-            featureImportance={featureImportance}
-            uncertainty={uncertainty}
-          />
-          <DataSourcesPanel
-            globalDataStatus={globalDataStatus}
-            loading={globalDataLoading}
-          />
-          <LimitationsPanel />
+          {sidebarTab === "system" && (
+            <div className="sidebar-panel-group">
+              <DataSourcesPanel
+                globalDataStatus={globalDataStatus}
+                loading={globalDataLoading}
+              />
+              <LimitationsPanel />
+            </div>
+          )}
         </aside>
       </main>
 

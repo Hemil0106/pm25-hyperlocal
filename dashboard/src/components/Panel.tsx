@@ -26,9 +26,10 @@ export function Panel({
 
 export function LoadingText({ label }: { label: string }) {
   return (
-    <p className="status-text" role="status">
-      {label}…
-    </p>
+    <div role="status" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <SkeletonLines lines={2} />
+      <p className="status-text">{label}…</p>
+    </div>
   );
 }
 
@@ -39,7 +40,10 @@ export function SkeletonLines({ lines = 3 }: { lines?: number }) {
         <div
           key={index}
           className={`skeleton sk-line ${index === 0 ? "wide" : index === lines - 1 ? "med" : "short"}`}
-          style={{ marginBottom: index < lines - 1 ? 8 : 0 }}
+          style={{
+            marginBottom: index < lines - 1 ? 8 : 0,
+            animationDelay: `${index * 100}ms`,
+          }}
         />
       ))}
     </div>
@@ -62,10 +66,13 @@ export function StatusPill({
   className?: string;
 }) {
   const normalized = status.toLowerCase();
-  const tone = normalized === "available" || normalized === "used"
-    ? "pill-ok"
-    : normalized === "fallback" || normalized === "partial" || normalized === "deferred"
-      ? "pill-warn"
-      : "pill-na";
-  return <span className={`status-pill ${tone} ${className ?? ""}`}>{status}</span>;
+  const tone =
+    normalized === "available" || normalized === "used"
+      ? "pill-ok"
+      : normalized === "fallback" || normalized === "partial" || normalized === "deferred"
+        ? "pill-warn"
+        : "pill-na";
+  return (
+    <span className={`status-pill ${tone} ${className ?? ""}`}>{status}</span>
+  );
 }

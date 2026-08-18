@@ -3,7 +3,7 @@ import type { LocationResponse } from "../types";
 function aqiCategoryColor(category: string | null): string {
   const map: Record<string, string> = {
     GOOD: "#5BBE48",
-    SATISFACTORY: "#F2D200",
+    SATISFACTORY: "#FFFF01",
     MODERATELY_POLLUTED: "#FE7E01",
     POOR: "#F00101",
     VERY_POOR: "#8F3F97",
@@ -62,7 +62,13 @@ export function MetricCards({
           <span className="metric-unit">sub-index</span>
         </div>
         <span className="metric-value">
-          {locationLoading ? "…" : location?.pm25_derived_aqi != null ? `${location.pm25_derived_aqi}` : hasSelection ? "Unavailable" : "Select a location"}
+          {locationLoading
+            ? "…"
+            : location?.pm25_derived_aqi != null
+              ? `${location.pm25_derived_aqi}`
+              : hasSelection
+                ? "Unavailable"
+                : "Select a location"}
         </span>
         <span
           className="metric-sub"

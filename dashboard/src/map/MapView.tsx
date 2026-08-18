@@ -45,11 +45,39 @@ interface MapViewProps {
   onStationClick: (station: Station) => void;
 }
 
-const REGION_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
+const REGION_CENTERS: Record<
+  string,
+  { center: [number, number]; zoom: number }
+> = {
   delhi: { center: [77.2, 28.6], zoom: 11 },
   pune: { center: [73.85, 18.55], zoom: 11 },
   mumbai: { center: [72.85, 19.05], zoom: 11 },
 };
+
+function createSelectionMarker(): HTMLElement {
+  const el = document.createElement("div");
+  el.style.cssText = `
+    width: 24px;
+    height: 24px;
+    position: relative;
+    cursor: pointer;
+  `;
+  el.innerHTML = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="#3da5f4" stroke-width="2" fill="rgba(61,165,244,0.15)"/>
+      <circle cx="12" cy="12" r="5" fill="#3da5f4"/>
+      <circle cx="12" cy="12" r="10" stroke="#3da5f4" stroke-width="1" opacity="0.4">
+        <animate attributeName="r" from="10" to="16" dur="1.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" from="0.5" to="0" dur="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <line x1="12" y1="0" x2="12" y2="6" stroke="#3da5f4" stroke-width="1.5"/>
+      <line x1="12" y1="18" x2="12" y2="24" stroke="#3da5f4" stroke-width="1.5"/>
+      <line x1="0" y1="12" x2="6" y2="12" stroke="#3da5f4" stroke-width="1.5"/>
+      <line x1="18" y1="12" x2="24" y2="12" stroke="#3da5f4" stroke-width="1.5"/>
+    </svg>
+  `;
+  return el;
+}
 
 export function MapView({
   rasters,
@@ -79,7 +107,10 @@ export function MapView({
     onStationClickRef.current = onStationClick;
   });
 
-  function whenReady(map: maplibregl.Map, callback: () => void) {
+  function whenReady(
+    map: maplibregl.Map,
+    callback: () => void,
+  ) {
     if (map.isStyleLoaded()) {
       callback();
     } else {
@@ -96,7 +127,10 @@ export function MapView({
       zoom: 10,
       attributionControl: { compact: true },
     });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+    map.addControl(
+      new maplibregl.NavigationControl({ showCompass: false }),
+      "top-left",
+    );
     mapRef.current = map;
 
     map.on("click", (event) => {
@@ -105,24 +139,42 @@ export function MapView({
         layers: ["stations-circle"],
       })[0];
       if (stationFeature && stationFeature.properties) {
-        const props = stationFeature.properties as unknown as Station;
+        const props =
+          stationFeature.properties as unknown as Station;
         onStationClickRef.current(props);
         return;
       }
       const hotspotFeature = map.queryRenderedFeatures(point, {
         layers: ["hotspots-fill", "hotspots-outline"],
       })[0];
-      onMapClickRef.current(event.lngLat.lat, event.lngLat.lng);
-      if (hotspotFeature && hotspotFeature.properties) {
-        onHotspotClickRef.current(hotspotFeature.properties as unknown as HotspotProperties);
+      onMapClickRef.current(
+        event.lngLat.lat,
+        event.lngLat.lng,
+      );
+      if (
+        hotspotFeature &&
+        hotspotFeature.properties
+      ) {
+        onHotspotClickRef.current(
+          hotspotFeature.properties as unknown as HotspotProperties,
+        );
       }
     });
 
     map.on("mousemove", (event) => {
-      const features = map.queryRenderedFeatures(event.point, {
-        layers: ["hotspots-fill", "hotspots-outline", "stations-circle"],
-      });
-      map.getCanvas().style.cursor = features.length ? "pointer" : "";
+      const features = map.queryRenderedFeatures(
+        event.point,
+        {
+          layers: [
+            "hotspots-fill",
+            "hotspots-outline",
+            "stations-circle",
+          ],
+        },
+      );
+      map.getCanvas().style.cursor = features.length
+        ? "pointer"
+        : "";
     });
 
     return () => {
@@ -160,7 +212,10 @@ export function MapView({
     const map = mapRef.current;
     if (!map || !rasters.aqi) return;
     whenReady(map, () =>
-      addImageLayer(map, "aqi", { data: rasters.aqi!, opacity: 0.8 }),
+      addImageLayer(map, "aqi", {
+        data: rasters.aqi!,
+        opacity: 0.8,
+      }),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rasters.aqi]);
@@ -169,7 +224,10 @@ export function MapView({
     const map = mapRef.current;
     if (!map || !rasters.aod) return;
     whenReady(map, () =>
-      addImageLayer(map, "aod", { data: rasters.aod!, opacity: 0.75 }),
+      addImageLayer(map, "aod", {
+        data: rasters.aod!,
+        opacity: 0.75,
+      }),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rasters.aod]);
@@ -179,18 +237,34 @@ export function MapView({
     if (!map) return;
     whenReady(map, () => {
       setLayerVisible(map, "pm25", visibility.pm25);
-      setLayerVisible(map, "pm25_1km", visibility.pm25_1km);
+      setLayerVisible(
+        map,
+        "pm25_1km",
+        visibility.pm25_1km,
+      );
       setLayerVisible(map, "aqi", visibility.aqi);
       setLayerVisible(map, "aod", visibility.aod);
-      setLayerVisible(map, "hotspots", visibility.hotspots);
-      setLayerVisible(map, "stations", visibility.stations);
+      setLayerVisible(
+        map,
+        "hotspots",
+        visibility.hotspots,
+      );
+      setLayerVisible(
+        map,
+        "stations",
+        visibility.stations,
+      );
     });
   }, [visibility]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.getLayer("pm25")) return;
-    map.setPaintProperty("pm25", "raster-opacity", pm25Opacity);
+    map.setPaintProperty(
+      "pm25",
+      "raster-opacity",
+      pm25Opacity,
+    );
   }, [pm25Opacity]);
 
   useEffect(() => {
@@ -199,9 +273,15 @@ export function MapView({
     whenReady(map, () => {
       if (hotspots) {
         addHotspotLayer(map, "hotspots", hotspots);
-        setLayerVisible(map, "hotspots", visibility.hotspots);
+        setLayerVisible(
+          map,
+          "hotspots",
+          visibility.hotspots,
+        );
       } else if (map.getSource("hotspots")) {
-        (map.getSource("hotspots") as maplibregl.GeoJSONSource).setData({
+        (
+          map.getSource("hotspots") as maplibregl.GeoJSONSource
+        ).setData({
           type: "FeatureCollection",
           features: [],
         });
@@ -216,9 +296,15 @@ export function MapView({
     whenReady(map, () => {
       if (stations) {
         addStationsLayer(map, "stations", stations);
-        setLayerVisible(map, "stations", visibility.stations);
+        setLayerVisible(
+          map,
+          "stations",
+          visibility.stations,
+        );
       } else if (map.getSource("stations")) {
-        (map.getSource("stations") as maplibregl.GeoJSONSource).setData({
+        (
+          map.getSource("stations") as maplibregl.GeoJSONSource
+        ).setData({
           type: "FeatureCollection",
           features: [],
         });
@@ -232,7 +318,8 @@ export function MapView({
     if (!map) return;
     if (!markerRef.current) {
       markerRef.current = new maplibregl.Marker({
-        color: "#0B3D91",
+        element: createSelectionMarker(),
+        anchor: "center",
       })
         .setLngLat([77.2, 28.6])
         .addTo(map);
@@ -244,7 +331,8 @@ export function MapView({
       ]);
       markerRef.current.getElement().style.display = "";
     } else {
-      markerRef.current.getElement().style.display = "none";
+      markerRef.current.getElement().style.display =
+        "none";
     }
   }, [selectedLocation]);
 
@@ -255,8 +343,15 @@ export function MapView({
     const prev = prevRegionRef.current;
     prevRegionRef.current = selectedRegion;
     if (prev === selectedRegion) return;
-    const target = REGION_CENTERS[selectedRegion] ?? REGION_CENTERS.delhi;
-    map.flyTo({ center: target.center, zoom: target.zoom, duration: 800 });
+    const target =
+      REGION_CENTERS[selectedRegion] ??
+      REGION_CENTERS.delhi;
+    map.flyTo({
+      center: target.center,
+      zoom: target.zoom,
+      duration: 800,
+      curve: 1.5,
+    });
   }, [selectedRegion]);
 
   useEffect(() => {
@@ -297,5 +392,11 @@ export function MapView({
     else map.on("load", fit);
   }, [regionBounds, bounds]);
 
-  return <div ref={containerRef} className="map-container" aria-label="GIS map" />;
+  return (
+    <div
+      ref={containerRef}
+      className="map-container"
+      aria-label="GIS map"
+    />
+  );
 }

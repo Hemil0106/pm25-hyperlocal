@@ -176,6 +176,10 @@ const NODATA_LOCATION: LocationResponse = {
   aod_used: false,
 };
 
+function clickTab(name: "Overview" | "Model & Data" | "System") {
+  fireEvent.click(screen.getByRole("button", { name }));
+}
+
 function installDefaultMocks() {
   mockedApi.getHealth.mockResolvedValue({
     status: "ok",
@@ -401,6 +405,10 @@ describe("App dashboard", () => {
   it("displays DEFERRED uncertainty with no fabricated confidence", async () => {
     render(<App />);
     await waitFor(() => {
+      expect(screen.getByTestId("map")).toBeInTheDocument();
+    });
+    clickTab("Model & Data");
+    await waitFor(() => {
       expect(screen.getAllByText("DEFERRED").length).toBeGreaterThan(0);
     });
     expect(screen.queryByText(/95% confidence/i)).not.toBeInTheDocument();
@@ -418,6 +426,10 @@ describe("App dashboard", () => {
 
   it("renders the Model & data panel from /metadata without em-dashes", async () => {
     render(<App />);
+    await waitFor(() => {
+      expect(screen.getByTestId("map")).toBeInTheDocument();
+    });
+    clickTab("Model & Data");
     const panel = await screen.findByText("Model & data");
     const section = panel.closest("section");
     expect(section).not.toBeNull();
@@ -513,6 +525,10 @@ describe("App dashboard", () => {
   it("renders human-readable feature importance labels", async () => {
     render(<App />);
     await waitFor(() => {
+      expect(screen.getByTestId("map")).toBeInTheDocument();
+    });
+    clickTab("Model & Data");
+    await waitFor(() => {
       expect(screen.getByText("Model feature importance")).toBeInTheDocument();
     });
     expect(screen.getByText("Road Density")).toBeInTheDocument();
@@ -522,6 +538,10 @@ describe("App dashboard", () => {
 
   it("shows prototype limitations when expanded", async () => {
     render(<App />);
+    await waitFor(() => {
+      expect(screen.getByTestId("map")).toBeInTheDocument();
+    });
+    clickTab("System");
     await waitFor(() => {
       expect(
         screen.getByRole("button", { name: "Show limitations" }),
@@ -555,6 +575,7 @@ describe("App dashboard", () => {
     await waitFor(() => {
       expect(screen.getByText("SIH Prototype")).toBeInTheDocument();
     });
+    clickTab("Model & Data");
     await waitFor(() => {
       expect(screen.getByText("Globalization status")).toBeInTheDocument();
     });
@@ -611,6 +632,7 @@ describe("App dashboard", () => {
     render(<App />);
     const select = await screen.findByLabelText("Selected region");
     fireEvent.change(select, { target: { value: "global" } });
+    clickTab("Model & Data");
     await waitFor(() => {
       expect(
         screen.getByText(/no validated model exists for this scope/i),
@@ -700,6 +722,10 @@ describe("App dashboard", () => {
       prediction_not_implemented: true,
     });
     render(<App />);
+    await waitFor(() => {
+      expect(screen.getByTestId("map")).toBeInTheDocument();
+    });
+    clickTab("System");
     const title = await screen.findByText("Data sources");
     const panel = title.closest("section");
     expect(panel).not.toBeNull();

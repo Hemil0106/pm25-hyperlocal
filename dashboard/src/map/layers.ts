@@ -8,8 +8,8 @@ export const BASE_STYLE: maplibregl.StyleSpecification = {
     basemap: {
       type: "raster",
       tiles: [
-        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-        "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
       ],
       tileSize: 256,
       attribution: "© OpenStreetMap contributors © CARTO",
@@ -60,8 +60,12 @@ export function addImageLayer(
   }
 }
 
-/** Add hotspots as a filled GeoJSON layer. */
-export function addHotspotLayer(map: Map, id: string, geojson: unknown): void {
+/** Add hotspots as a filled GeoJSON layer with glow effect. */
+export function addHotspotLayer(
+  map: Map,
+  id: string,
+  geojson: unknown,
+): void {
   if (map.getSource(id)) {
     (map.getSource(id) as GeoJSONSource).setData(geojson as never);
   } else {
@@ -76,8 +80,17 @@ export function addHotspotLayer(map: Map, id: string, geojson: unknown): void {
       type: "fill",
       source: id,
       paint: {
-        "fill-color": "#8F3F97",
-        "fill-opacity": 0.45,
+        "fill-color": "#a855f7",
+        "fill-opacity": 0.35,
+      },
+    });
+    map.addLayer({
+      id: `${id}-glow`,
+      type: "fill",
+      source: id,
+      paint: {
+        "fill-color": "#c084fc",
+        "fill-opacity": 0.12,
       },
     });
     map.addLayer({
@@ -85,15 +98,20 @@ export function addHotspotLayer(map: Map, id: string, geojson: unknown): void {
       type: "line",
       source: id,
       paint: {
-        "line-color": "#7E0023",
-        "line-width": 2,
+        "line-color": "#c084fc",
+        "line-width": 1.5,
+        "line-opacity": 0.7,
       },
     });
   }
 }
 
-/** Add CPCB stations as a circle + label layer. */
-export function addStationsLayer(map: Map, id: string, stations: Station[]): void {
+/** Add CPCB stations as a circle + label layer with radar pulse. */
+export function addStationsLayer(
+  map: Map,
+  id: string,
+  stations: Station[],
+): void {
   const geojson = {
     type: "FeatureCollection",
     features: stations.map((station) => ({
@@ -110,15 +128,26 @@ export function addStationsLayer(map: Map, id: string, stations: Station[]): voi
   } else {
     map.addSource(id, { type: "geojson", data: geojson as never });
   }
-  if (!map.getLayer(`${id}-circle`)) {
+  if (!map.getLayer(`${id}-pulse`)) {
+    map.addLayer({
+      id: `${id}-pulse`,
+      type: "circle",
+      source: id,
+      paint: {
+        "circle-radius": 12,
+        "circle-color": "#3da5f4",
+        "circle-opacity": 0.15,
+        "circle-stroke-width": 0,
+      },
+    });
     map.addLayer({
       id: `${id}-circle`,
       type: "circle",
       source: id,
       paint: {
-        "circle-radius": 7,
-        "circle-color": "#0B3D91",
-        "circle-stroke-color": "#FFFFFF",
+        "circle-radius": 6,
+        "circle-color": "#3da5f4",
+        "circle-stroke-color": "#ffffff",
         "circle-stroke-width": 2,
       },
     });
@@ -129,23 +158,29 @@ export function addStationsLayer(map: Map, id: string, stations: Station[]): voi
       layout: {
         "text-field": ["get", "station_id"],
         "text-size": 10,
-        "text-offset": [0, 1.2],
+        "text-offset": [0, 1.4],
         "text-anchor": "top",
       },
       paint: {
-        "text-color": "#0B3D91",
-        "text-halo-color": "#FFFFFF",
-        "text-halo-width": 1,
+        "text-color": "#93c5fd",
+        "text-halo-color": "rgba(0, 0, 0, 0.7)",
+        "text-halo-width": 1.5,
       },
     });
   }
 }
 
 /** Set a layer's visibility by id. */
-export function setLayerVisible(map: Map, id: string, visible: boolean): void {
+export function setLayerVisible(
+  map: Map,
+  id: string,
+  visible: boolean,
+): void {
   const layerIds = map
     .getStyle()
-    .layers.filter((layer) => (layer as { source?: string }).source === id)
+    .layers.filter(
+      (layer) => (layer as { source?: string }).source === id,
+    )
     .map((layer) => layer.id);
   for (const layerId of layerIds) {
     map.setLayoutProperty(
