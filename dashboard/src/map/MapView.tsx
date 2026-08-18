@@ -36,12 +36,19 @@ interface MapViewProps {
   stations: Station[] | null;
   bounds: Bounds | null;
   regionBounds: Bounds | null;
+  selectedRegion: string;
   selectedLocation: { latitude: number; longitude: number } | null;
   pm25Opacity: number;
   onMapClick: (latitude: number, longitude: number) => void;
   onHotspotClick: (properties: HotspotProperties) => void;
   onStationClick: (station: Station) => void;
 }
+
+const REGION_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
+  delhi: { center: [77.2, 28.6], zoom: 11 },
+  pune: { center: [73.85, 18.55], zoom: 11 },
+  mumbai: { center: [72.85, 19.05], zoom: 11 },
+};
 
 export function MapView({
   rasters,
@@ -50,6 +57,7 @@ export function MapView({
   stations,
   bounds,
   regionBounds,
+  selectedRegion,
   selectedLocation,
   pm25Opacity,
   onMapClick,
@@ -228,6 +236,17 @@ export function MapView({
       markerRef.current.getElement().style.display = "none";
     }
   }, [selectedLocation]);
+
+  const prevRegionRef = useRef(selectedRegion);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const prev = prevRegionRef.current;
+    prevRegionRef.current = selectedRegion;
+    if (prev === selectedRegion) return;
+    const target = REGION_CENTERS[selectedRegion] ?? REGION_CENTERS.delhi;
+    map.flyTo({ center: target.center, zoom: target.zoom, duration: 800 });
+  }, [selectedRegion]);
 
   useEffect(() => {
     const map = mapRef.current;

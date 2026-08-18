@@ -452,6 +452,7 @@ export default function App() {
               stations={stations}
               bounds={rasters.pm25?.bounds ?? null}
               regionBounds={nonDelhiRegion ? regionBounds : null}
+              selectedRegion={selectedRegion}
               selectedLocation={selectedLocation}
               pm25Opacity={pm25Opacity}
               onMapClick={handleMapClick}
