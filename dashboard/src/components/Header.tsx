@@ -1,4 +1,5 @@
 import type { GlobalDataStatusResponse } from "../types";
+import { DateAnimator } from "./DateAnimator";
 
 interface HeaderProps {
   dates: string[];
@@ -38,6 +39,14 @@ function BrandMark() {
   );
 }
 
+const REGION_LABELS: Record<string, string> = {
+  delhi: "Delhi",
+  pune: "Pune",
+  mumbai: "Mumbai",
+  india: "India",
+  global: "Global",
+};
+
 export function Header({
   dates,
   model,
@@ -55,11 +64,7 @@ export function Header({
 }: HeaderProps) {
   const regionNames = regions ? Object.entries(regions) : [];
   const scopeLabel =
-    selectedRegion === "global"
-      ? "GLOBAL"
-      : selectedRegion === "india"
-        ? "INDIA"
-        : "DELHI";
+    (REGION_LABELS[selectedRegion] ?? selectedRegion).toUpperCase();
 
   const dataOverall = dataLoading
     ? "…"
@@ -103,7 +108,7 @@ export function Header({
             ))}
           </select>
         </div>
-        <div className="header-control">
+        <div className="header-control header-control-date">
           <span className="header-control-label">Date</span>
           <select
             className="header-select"
@@ -118,6 +123,11 @@ export function Header({
               </option>
             ))}
           </select>
+          <DateAnimator
+            dates={dates}
+            selectedDate={selectedDate}
+            onDateChange={onDateChange}
+          />
         </div>
 
         <div className="header-status-cluster">

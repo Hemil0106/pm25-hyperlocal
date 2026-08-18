@@ -56,6 +56,26 @@ export function HotspotSummary({ stats }: { stats: HotspotStatisticsResponse | n
   if (!stats || stats.hotspot_zone_count == null) {
     return null;
   }
+
+  if (stats.hotspot_zone_count === 0) {
+    return (
+      <div className="hotspot-summary" aria-label="Hotspot statistics">
+        <div className="panel-header">
+          <h3 className="panel-title">Predicted high-pollution zones</h3>
+        </div>
+        <div className="hotspot-empty-state">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" opacity="0.35" />
+            <path d="M8 12h8" opacity="0.5" />
+          </svg>
+          <p className="hotspot-empty-text">
+            No high-pollution zones detected for this date and city. AQI levels remain below the &lsquo;Very Poor&rsquo; threshold.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="hotspot-summary" aria-label="Hotspot statistics">
       <div className="panel-header">

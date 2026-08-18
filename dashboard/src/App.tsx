@@ -26,6 +26,7 @@ import { LocationPanel } from "./components/LocationPanel";
 import { ModelInfoPanel } from "./components/ModelInfoPanel";
 import { DataSourcesPanel } from "./components/DataSourcesPanel";
 import { LimitationsPanel } from "./components/LimitationsPanel";
+import { MethodologyPanel } from "./components/MethodologyPanel";
 import { GlobalStatusPanel } from "./components/GlobalStatusPanel";
 import { Footer } from "./components/Footer";
 import { LayerControl, HotspotSummary } from "./components/LayerControl";
@@ -753,6 +754,7 @@ export default function App() {
 
           {sidebarTab === "system" && (
             <div className="sidebar-panel-group">
+              <MethodologyPanel />
               <DataSourcesPanel
                 globalDataStatus={globalDataStatus}
                 loading={globalDataLoading}
@@ -763,7 +765,10 @@ export default function App() {
         </aside>
       </main>
 
-      <Footer />
+      <Footer
+        regionName={selectedRegion}
+        aodUsed={metadataPm25?.AOD_used ?? false}
+      />
     </div>
   );
 }
