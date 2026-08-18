@@ -2,13 +2,11 @@ import { useState } from "react";
 import { Panel } from "./Panel";
 
 const LIMITATIONS = [
-  "AOD currently unavailable",
-  "Fallback model currently active",
-  "Training dataset is small",
-  "500 m residual model not trained",
-  "500 m output is a baseline spatial refinement",
+  "Delhi uses a trained XGBoost model; Pune/Mumbai use pre-generated PM2.5 rasters",
+  "ML model trained on 6 Delhi CPCB stations only — 36 stations across 3 cities, but no cross-city model exists",
+  "500 m maps are pre-generated spatial refinements, not from a trained downscaling model",
   "Uncertainty estimation deferred",
-  "Hotspots represent predicted high-pollution zones",
+  "Hotspots represent predicted high-pollution zones — not confirmed emission sources",
   "PM2.5-derived AQI is not the full multi-pollutant National AQI",
 ];
 

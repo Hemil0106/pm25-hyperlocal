@@ -527,8 +527,8 @@ describe("App dashboard", () => {
       ).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("button", { name: "Show limitations" }));
-    expect(screen.getByText("AOD currently unavailable")).toBeInTheDocument();
-    expect(screen.getByText("500 m residual model not trained")).toBeInTheDocument();
+    expect(screen.getByText("Delhi uses a trained XGBoost model; Pune/Mumbai use pre-generated PM2.5 rasters")).toBeInTheDocument();
+    expect(screen.getByText("500 m maps are pre-generated spatial refinements, not from a trained downscaling model")).toBeInTheDocument();
     expect(
       screen.getByText("PM2.5-derived AQI is not the full multi-pollutant National AQI"),
     ).toBeInTheDocument();
