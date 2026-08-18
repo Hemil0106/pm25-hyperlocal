@@ -195,27 +195,38 @@ def pm25_to_aqi_raster(pm25_arr: np.ndarray) -> np.ndarray:
     return np.round(result).astype(np.float32)
 
 
-def detect_hotspots(aqi_arr: np.ndarray, nodata: float = -9999.0) -> list:
+def detect_hotspots(aqi_arr: np.ndarray, aoi_transform, aoi_crs, nodata: float = -9999.0) -> list:
+    from pyproj import Transformer as _Transformer
+
     very_poor = (aqi_arr >= 301) & (aqi_arr != nodata)
     if not very_poor.any():
         return []
     labeled, n_features = ndlabel(very_poor)
     shapes_list = []
+    to_wgs84 = _Transformer.from_crs(aoi_crs, "EPSG:4326", always_xy=True)
     for i in range(1, n_features + 1):
         mask = labeled == i
-        polys = [sh for sh, val in rasterio.features.shapes(mask.astype(np.uint8), mask=mask, transform=rasterio.transform.from_bounds(0, 0, mask.shape[1], mask.shape[0], mask.shape[1], mask.shape[0])) if val == 1]
+        polys = [sh for sh, val in rasterio.features.shapes(mask.astype(np.uint8), mask=mask, transform=aoi_transform) if val == 1]
         if polys:
             merged = unary_union([shape(s) for s in polys])
             if merged.is_valid and not merged.is_empty:
-                areas = []
                 for s in (merged.geoms if merged.geom_type == "MultiPolygon" else [merged]):
-                    area_m2 = s.area * (500 * 500)
-                    areas.append({
-                        "geometry": mapping(s),
-                        "area_km2": round(area_m2 / 1e6, 2),
+                    lon_coords, lat_coords = to_wgs84.transform(
+                        np.array(s.exterior.coords.xy[0]),
+                        np.array(s.exterior.coords.xy[1]),
+                    )
+                    from shapely.geometry import Polygon as _Polygon
+                    wgs84_poly = _Polygon(zip(lon_coords, lat_coords))
+                    area_m2 = 0
+                    for geom in (merged.geoms if merged.geom_type == "MultiPolygon" else [merged]):
+                        area_m2 += geom.area
+                    pixel_area = abs(aoi_transform.a * aoi_transform.e)
+                    real_area_m2 = area_m2
+                    shapes_list.append({
+                        "geometry": mapping(wgs84_poly),
+                        "area_km2": round(real_area_m2 / 1e6, 2),
                         "mean_aqi": round(float(aqi_arr[mask].mean()), 1),
                     })
-                shapes_list.extend(areas)
     return shapes_list
 
 
@@ -304,7 +315,7 @@ def generate_city(city_id: str, city: dict):
             aoi_transform = src.transform
             aoi_crs = src.crs
 
-        for hs in detect_hotspots(aqi_data):
+        for hs in detect_hotspots(aqi_data, aoi_transform, aoi_crs):
             all_hotspots.append({
                 "type": "Feature",
                 "properties": {
