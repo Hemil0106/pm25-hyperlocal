@@ -297,15 +297,6 @@ aoi:
       name: "Delhi"
       geometry_file: "data/raw/aoi.geojson"
       aqi_scheme: "india_cpcb"
-    india:
-      mode: "bbox"
-      name: "India"
-      bbox:
-        min_lon: 65.0
-        min_lat: 5.0
-        max_lon: 100.0
-        max_lat: 40.0
-      aqi_scheme: "india_cpcb"
     pune:
       mode: "bbox"
       name: "Pune"
@@ -324,10 +315,21 @@ aoi:
         max_lon: 73.0
         max_lat: 19.3
       aqi_scheme: "india_cpcb"
+    india:
+      mode: "bbox"
+      name: "India"
+      bbox:
+        min_lon: 65.0
+        min_lat: 5.0
+        max_lon: 100.0
+        max_lat: 40.0
+      aqi_scheme: "india_cpcb"
+      _hidden: true
     global:
       mode: "global"
       name: "Global"
       aqi_scheme: "none"
+      _hidden: true
 
 tiles:
   enabled: true
@@ -421,7 +423,7 @@ model_scopes:
 global_data:
   enabled: true
   # Default acquisition scope for `python run.py --global-data-only`.
-  # Supported: global | india | delhi. Artifact scope must equal requested scope.
+  # Supported: delhi | pune | mumbai. Artifact scope must equal requested scope.
   scope: "global"
   common_grid:
     # 1 km framework is acquired per tile; 500 m is the target framework that a

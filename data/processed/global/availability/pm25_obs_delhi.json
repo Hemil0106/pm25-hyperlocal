@@ -1,0 +1,12 @@
+{
+  "scope": "delhi",
+  "n_stations": 18,
+  "n_observations": 8640,
+  "countries": [
+    "IN"
+  ],
+  "date_range": [
+    "2025-01-01",
+    "2025-01-06"
+  ]
+}

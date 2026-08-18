@@ -419,6 +419,57 @@ body {
   gap: 14px;
   padding: 6px 20px 20px;
   align-items: stretch;
+  transition: grid-template-columns 0.3s var(--ease);
+}
+
+.main-grid.right-closed {
+  grid-template-columns: minmax(0, 1fr) 0px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Shutter buttons — collapse/expand side panels
+ * ------------------------------------------------------------------------- */
+
+.shutter-btn {
+  position: absolute;
+  z-index: 10;
+  width: 28px;
+  height: 56px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-s);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  padding: 0;
+}
+
+.shutter-btn:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.shutter-left {
+  top: 12px;
+  right: 12px;
+  z-index: 7;
+}
+
+.shutter-right {
+  top: 50%;
+  right: 388px;
+  transform: translateY(-50%);
+  transition: right 0.3s var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.shutter-right.shuttle-open {
+  right: 8px;
 }
 
 .map-col {
@@ -505,6 +556,14 @@ body {
   width: 272px;
   max-height: calc(100% - 24px);
   overflow-y: auto;
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease), visibility 0.25s var(--ease);
+}
+
+.map-floating-controls.collapsed {
+  opacity: 0;
+  transform: translateX(-16px);
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* ---------------------------------------------------------------------------
@@ -518,6 +577,14 @@ body {
   overflow-y: auto;
   max-height: calc(100vh - 224px);
   padding-right: 2px;
+  transition: opacity 0.25s var(--ease), visibility 0.25s var(--ease);
+}
+
+.side-col.collapsed {
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .panel {
@@ -1186,6 +1253,14 @@ body {
     gap: 16px;
   }
 
+  .main-grid.right-closed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shutter-btn {
+    display: none;
+  }
+
   .map-col {
     height: 560px;
     min-height: 0;
@@ -1196,10 +1271,23 @@ body {
     overflow: visible;
   }
 
+  .side-col.collapsed {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
   .map-floating-controls {
     position: static;
     width: 100%;
     max-height: none;
+  }
+
+  .map-floating-controls.collapsed {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
   }
 
   .map-shell {

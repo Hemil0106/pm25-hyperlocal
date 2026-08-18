@@ -77,9 +77,9 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): num
   return 2 * earthKm * Math.asin(Math.sqrt(a));
 }
 
-/** Map an M15 region id to the M16 acquisition scope (global | india | delhi). */
+/** Map an M15 region id to the M16 acquisition scope (delhi | pune | mumbai). */
 function scopeForRegion(region: string): string {
-  if (region === "india" || region === "global") return region;
+  if (region === "delhi" || region === "pune" || region === "mumbai") return region;
   return "delhi";
 }
 
@@ -132,6 +132,9 @@ export default function App() {
   const [selectedHotspot, setSelectedHotspot] = useState<HotspotProperties | null>(null);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [stationDetail, setStationDetail] = useState<StationDetail | null>(null);
+
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -439,7 +442,7 @@ export default function App() {
         </div>
       )}
 
-      <main className="main-grid">
+      <main className={`main-grid${rightPanelOpen ? "" : " right-closed"}`}>
         <section className="map-col" aria-label="Interactive map">
           <div className="map-shell">
             <MapView
@@ -477,7 +480,15 @@ export default function App() {
                 Loading PM2.5 layer…
               </div>
             )}
-            <div className="map-floating-controls">
+            <button
+              className="shutter-btn shutter-left"
+              onClick={() => setLeftPanelOpen((v) => !v)}
+              title={leftPanelOpen ? "Hide controls" : "Show controls"}
+              aria-label={leftPanelOpen ? "Hide controls" : "Show controls"}
+            >
+              {leftPanelOpen ? "\u2039" : "\u203A"}
+            </button>
+            <div className={`map-floating-controls${leftPanelOpen ? "" : " collapsed"}`}>
               <LayerControl
                 visibility={visibility}
                 onToggle={handleLayerToggle}
@@ -494,7 +505,16 @@ export default function App() {
           </div>
         </section>
 
-        <aside className="side-col">
+        <button
+          className={`shutter-btn shutter-right${rightPanelOpen ? "" : " shuttle-open"}`}
+          onClick={() => setRightPanelOpen((v) => !v)}
+          title={rightPanelOpen ? "Hide panel" : "Show panel"}
+          aria-label={rightPanelOpen ? "Hide panel" : "Show panel"}
+        >
+          {rightPanelOpen ? "\u203A" : "\u2039"}
+        </button>
+
+        <aside className={`side-col${rightPanelOpen ? "" : " collapsed"}`}>
           <LocationPanel
             location={location}
             loading={locationLoading}

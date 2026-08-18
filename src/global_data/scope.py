@@ -10,14 +10,14 @@ from __future__ import annotations
 
 from typing import Optional
 
-SUPPORTED_SCOPES = ("global", "india", "delhi")
+SUPPORTED_SCOPES = ("global", "india", "delhi", "pune", "mumbai")
 
-# Named scope bounds are the single source of truth for scope isolation.
-# They mirror the region catalog in config.yaml (regions.global/india/delhi).
 SCOPE_BOUNDS = {
     "global": {"west": -180.0, "south": -90.0, "east": 180.0, "north": 90.0},
     "india": {"west": 65.0, "south": 5.0, "east": 100.0, "north": 40.0},
     "delhi": {"west": 77.0, "south": 28.4, "east": 77.4, "north": 28.8},
+    "pune": {"west": 73.7, "south": 18.4, "east": 74.1, "north": 18.7},
+    "mumbai": {"west": 72.7, "south": 18.8, "east": 73.0, "north": 19.3},
 }
 
 
@@ -56,7 +56,7 @@ def infer_scope(bounds: dict) -> str:
     Iterated smallest-first so a Delhi artifact is never reported as India or
     Global.
     """
-    for scope in ("delhi", "india", "global"):
+    for scope in ("delhi", "pune", "mumbai", "india", "global"):
         if is_contained(bounds, SCOPE_BOUNDS[scope]):
             return scope
     return "outside_all_scopes"

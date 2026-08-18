@@ -1,0 +1,12 @@
+{
+  "scope": "pune",
+  "n_stations": 8,
+  "n_observations": 3840,
+  "countries": [
+    "IN"
+  ],
+  "date_range": [
+    "2025-01-01",
+    "2025-01-06"
+  ]
+}

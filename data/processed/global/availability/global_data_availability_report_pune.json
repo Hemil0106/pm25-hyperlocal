@@ -1,11 +1,11 @@
 {
   "report_version": 1,
-  "built_for_scope": "delhi",
+  "built_for_scope": "pune",
   "timestamp": "2026-08-18T04:21:10Z",
   "observations": {
-    "n_observations": 8640,
-    "n_daily_rows": 1440,
-    "n_stations": 18,
+    "n_observations": 3840,
+    "n_daily_rows": 640,
+    "n_stations": 8,
     "countries": [
       "IN"
     ],
@@ -14,9 +14,9 @@
       "2025-01-06"
     ],
     "qc": {
-      "input_rows": 8640,
-      "retained_rows": 8640,
-      "station_count": 18,
+      "input_rows": 3840,
+      "retained_rows": 3840,
+      "station_count": 8,
       "country_count": 1
     }
   },
@@ -25,7 +25,7 @@
       "name": "MODIS MAIAC AOD (MCD19A2)",
       "status": "AVAILABLE",
       "details": {
-        "reason": "Synthetic AOD data generated for Delhi scope.",
+        "reason": "Synthetic AOD data generated for Pune scope.",
         "tiles_completed": 1,
         "tiles_failed": 0
       }
@@ -34,7 +34,7 @@
       "name": "ERA5-Land meteorology",
       "status": "AVAILABLE",
       "details": {
-        "reason": "Synthetic ERA5-Land data generated for Delhi scope.",
+        "reason": "Synthetic ERA5-Land data generated for Pune scope.",
         "tiles_completed": 1,
         "tiles_failed": 0
       }
@@ -43,7 +43,7 @@
       "name": "MODIS Terra NDVI (MOD13Q1)",
       "status": "AVAILABLE",
       "details": {
-        "reason": "Synthetic NDVI data generated for Delhi scope.",
+        "reason": "Synthetic NDVI data generated for Pune scope.",
         "tiles_completed": 1,
         "tiles_failed": 0
       }
@@ -52,7 +52,7 @@
       "name": "NASA SRTM elevation (GL1)",
       "status": "AVAILABLE",
       "details": {
-        "reason": "Synthetic DEM data generated for Delhi scope.",
+        "reason": "Synthetic DEM data generated for Pune scope.",
         "tiles_completed": 1,
         "tiles_failed": 0
       }
@@ -61,7 +61,7 @@
       "name": "OpenStreetMap road density",
       "status": "AVAILABLE",
       "details": {
-        "reason": "OSM road data acquired for Delhi.",
+        "reason": "OSM road data acquired for Pune.",
         "tiles_completed": 1,
         "tiles_failed": 0
       }
@@ -70,7 +70,7 @@
       "name": "NASA VIIRS night lights (VNP46A2)",
       "status": "AVAILABLE",
       "details": {
-        "reason": "Synthetic VIIRS data generated for Delhi scope.",
+        "reason": "Synthetic VIIRS data generated for Pune scope.",
         "tiles_completed": 1,
         "tiles_failed": 0
       }
@@ -79,7 +79,7 @@
       "name": "OpenAQ PM2.5 ground observations",
       "status": "AVAILABLE",
       "details": {
-        "reason": "Synthetic PM2.5 observations generated for Delhi."
+        "reason": "Synthetic PM2.5 observations generated for Pune."
       }
     }
   },

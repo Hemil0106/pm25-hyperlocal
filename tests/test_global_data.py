@@ -158,7 +158,7 @@ def make_config(tmp_path: Path, **overrides) -> dict:
 # ---------------------------------------------------------------------------
 
 def test_scope_validation_supported_scopes():
-    assert SUPPORTED_SCOPES == ("global", "india", "delhi")
+    assert SUPPORTED_SCOPES == ("global", "india", "delhi", "pune", "mumbai")
     assert validate_scope("Global") == "global"
     assert validate_scope(None) == "global"
     assert validate_scope("  delhi ") == "delhi"

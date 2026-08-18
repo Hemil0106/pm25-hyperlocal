@@ -44,6 +44,8 @@ def get_regions():
     regions = aoi_cfg.get("regions", {})
     out = {}
     for region_id, region_cfg in regions.items():
+        if region_cfg.get("_hidden"):
+            continue
         name = region_cfg.get("name", region_id)
         try:
             aoi = resolve_aoi(config, region=region_id)
