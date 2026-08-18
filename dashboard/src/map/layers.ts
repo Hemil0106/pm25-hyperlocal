@@ -1,8 +1,8 @@
 import type { RasterLayerData, Station } from "../types";
 import type { GeoJSONSource, Map } from "maplibre-gl";
 
-/** Neutral light basemap (CARTO, no API key required). */
-export const BASE_STYLE: maplibregl.StyleSpecification = {
+/** Dark basemap (CARTO, no API key required). */
+export const DARK_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
     basemap: {
@@ -23,6 +23,31 @@ export const BASE_STYLE: maplibregl.StyleSpecification = {
     },
   ],
 };
+
+/** Light basemap (CARTO, no API key required). */
+export const LIGHT_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    basemap: {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "basemap",
+      type: "raster",
+      source: "basemap",
+    },
+  ],
+};
+
+export const BASE_STYLE = DARK_STYLE;
 
 export interface ImageLayerOptions {
   id: string;

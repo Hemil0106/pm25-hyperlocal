@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
-  BASE_STYLE,
+  DARK_STYLE,
+  LIGHT_STYLE,
   addHotspotLayer,
   addImageLayer,
   addStationsLayer,
@@ -40,6 +41,7 @@ interface MapViewProps {
   selectedRegion: string;
   selectedLocation: { latitude: number; longitude: number } | null;
   pm25Opacity: number;
+  mapTheme: "dark" | "light";
   onMapClick: (latitude: number, longitude: number) => void;
   onHotspotClick: (properties: HotspotProperties) => void;
   onStationClick: (station: Station) => void;
@@ -89,6 +91,7 @@ export function MapView({
   selectedRegion,
   selectedLocation,
   pm25Opacity,
+  mapTheme,
   onMapClick,
   onHotspotClick,
   onStationClick,
@@ -122,7 +125,7 @@ export function MapView({
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: BASE_STYLE,
+      style: DARK_STYLE,
       center: [77.2, 28.6],
       zoom: 10,
       attributionControl: { compact: true },
@@ -353,6 +356,13 @@ export function MapView({
       curve: 1.5,
     });
   }, [selectedRegion]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const target = mapTheme === "light" ? LIGHT_STYLE : DARK_STYLE;
+    map.setStyle(target);
+  }, [mapTheme]);
 
   useEffect(() => {
     const map = mapRef.current;
