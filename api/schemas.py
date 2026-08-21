@@ -53,6 +53,14 @@ class AQIResponse(BaseModel):
     type: str = Field(default="PM2.5-derived AQI/sub-index")
 
 
+class AODInfo(BaseModel):
+    aod: Optional[float] = Field(default=None, description="Aerosol Optical Depth at 550nm")
+    source: str = Field(default="MODIS/MAIAC MCD19A2 v061")
+    resolution_m: int = Field(default=500, description="Spatial resolution in meters")
+    crs: Optional[str] = None
+    date: Optional[str] = None
+
+
 class LocationResponse(BaseModel):
     date: str
     location: dict
@@ -66,6 +74,7 @@ class LocationResponse(BaseModel):
     model: str
     dataset_mode: str
     aod_used: bool
+    aod_info: Optional[AODInfo] = None
 
 
 class HotspotStatisticsResponse(BaseModel):

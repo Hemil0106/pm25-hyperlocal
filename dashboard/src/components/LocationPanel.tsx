@@ -129,7 +129,18 @@ export function LocationPanel({
           </div>
           <div className="loc-row">
             <span className="loc-label">AOD</span>
-            <span className="loc-value">{location.aod_used ? "Used" : "Unavailable"}</span>
+            <span className="loc-value">
+              {location.aod_info?.aod != null ? (
+                <>
+                  <span className="tech-value">{location.aod_info.aod.toFixed(3)}</span>
+                  <span className="loc-sub">{location.aod_info.source} ({location.aod_info.resolution_m}m)</span>
+                </>
+              ) : location.aod_used ? (
+                <span className="tech-value">Available</span>
+              ) : (
+                <span className="status-pill pill-na">Unavailable</span>
+              )}
+            </span>
           </div>
           <div className="loc-row">
             <span className="loc-label">Uncertainty</span>

@@ -104,6 +104,27 @@ export function MetricCards({
         <span className="metric-value">{model ?? "—"}</span>
         <span className="metric-sub">no accuracy claim</span>
       </div>
+
+      <div className="metric-card">
+        <div className="metric-head">
+          <span className="metric-label">AOD</span>
+          <span className="metric-unit">MODIS/MAIAC</span>
+        </div>
+        <span className="metric-value">
+          {locationLoading
+            ? "…"
+            : location?.aod_info?.aod != null
+              ? `${location.aod_info.aod.toFixed(3)}`
+              : hasSelection
+                ? "No data"
+                : "Select a location"}
+        </span>
+        <span className="metric-sub">
+          {location?.aod_info?.aod != null
+            ? `${location.aod_info.source.split(" ")[0]} @ ${location.aod_info.resolution_m}m`
+            : "aerosol optical depth 550nm"}
+        </span>
+      </div>
     </div>
   );
 }

@@ -275,3 +275,138 @@ def test_root_route():
     response = client.get("/")
     assert response.status_code == 200
     assert response.json()["service"] == "pm25-mapping-api"
+
+
+# ---------------------------------------------------------------------------
+# AOD Activation Tests
+# ---------------------------------------------------------------------------
+
+def test_health_includes_aod():
+    response = client.get("/health")
+    body = response.json()
+    assert "aod" in body
+    assert body["aod"]["configured"] in (True, False)
+    assert body["aod"]["provider"] == "NASA MODIS MAIAC"
+    assert body["aod"]["product"] == "MCD19A2.061"
+
+
+def test_location_includes_aod_info():
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    assert response.status_code == 200
+    body = response.json()
+    assert "aod_info" in body
+    aod_info = body["aod_info"]
+    if aod_info is not None:
+        assert "aod" in aod_info
+        assert "source" in aod_info
+        assert "resolution_m" in aod_info
+        assert "crs" in aod_info
+        assert "date" in aod_info
+        assert aod_info["source"] == "MODIS/MAIAC MCD19A2 v061"
+        assert aod_info["resolution_m"] == 500
+
+
+def test_location_aod_value_matches_raster():
+    import rasterio as _rasterio
+    from rasterio.warp import transform as _warp_transform
+    aod_path = f"data/processed/aod_500m_{KNOWN_DATE}.tif"
+    with _rasterio.open(aod_path) as src:
+        array = src.read(1)
+        xs, ys = _warp_transform("EPSG:4326", src.crs, [LON], [LAT])
+        col, row = _rasterio.transform.rowcol(src.transform, xs[0], ys[0])
+        expected = float(array[row, col])
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    aod_info = response.json()["aod_info"]
+    assert aod_info is not None
+    assert aod_info["aod"] is not None
+    assert math.isclose(aod_info["aod"], round(expected, 4), rel_tol=1e-3)
+
+
+def test_location_aod_valid_range():
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    aod_info = response.json()["aod_info"]
+    assert aod_info is not None
+    aod_val = aod_info["aod"]
+    assert aod_val is not None
+    assert 0.0 <= aod_val <= 5.0, f"AOD value {aod_val} outside valid range [0, 5]"
+
+
+def test_location_aod_set_used_when_available():
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    body = response.json()
+    if body.get("aod_info") and body["aod_info"].get("aod") is not None:
+        assert body["aod_used"] is True
+
+
+def test_raster_aod_serves_geotiff():
+    response = client.get(f"/raster/aod?date={KNOWN_DATE}")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/tiff")
+    assert len(response.content) > 100
+
+
+def test_raster_aod_invalid_date_404():
+    response = client.get("/raster/aod?date=2099-01-01")
+    assert response.status_code == 404
+
+
+def test_aod_no_path_traversal():
+    traversal = "2025-01-01/../../../config.yaml"
+    response = client.get(f"/raster/aod?date={traversal}")
+    assert response.status_code in (404, 422)
+
+
+def test_location_outside_aoi_returns_400():
+    response = client.get(f"/location?date={KNOWN_DATE}&lat=10&lon=10")
+    assert response.status_code == 400
+
+
+def test_aod_raster_valid_crs():
+    import rasterio as _rasterio
+    aod_path = f"data/processed/aod_500m_{KNOWN_DATE}.tif"
+    with _rasterio.open(aod_path) as src:
+        crs = src.crs.to_string()
+        assert "EPSG" in crs
+        assert src.nodata is not None
+
+
+def test_aod_all_dates_available():
+    """Verify AOD GeoTIFFs exist for all known dates."""
+    from pathlib import Path as _Path
+    known_dates = sorted({
+        p.stem.replace("aod_500m_", "")
+        for p in _Path("data/processed").glob("aod_500m_*.tif")
+    })
+    assert len(known_dates) >= 1
+    for d in known_dates:
+        response = client.get(f"/raster/aod?date={d}")
+        assert response.status_code == 200, f"AOD raster missing for {d}"
+
+
+def test_aod_pune_city():
+    response = client.get(f"/raster/aod?date={KNOWN_DATE}&city=pune")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/tiff")
+
+
+def test_aod_mumbai_city():
+    response = client.get(f"/raster/aod?date={KNOWN_DATE}&city=mumbai")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/tiff")
+
+
+def test_aod_raster_finite_values():
+    """Ensure AOD rasters don't have inf or all-NaN bands."""
+    import rasterio as _rasterio
+    import numpy as _np
+    aod_path = f"data/processed/aod_500m_{KNOWN_DATE}.tif"
+    with _rasterio.open(aod_path) as src:
+        data = src.read(1)
+        assert _np.all(_np.isfinite(data[data != src.nodata]))
+
+
+def test_location_aod_crs_epsg():
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    aod_info = response.json().get("aod_info")
+    if aod_info and aod_info.get("crs"):
+        assert "EPSG" in aod_info["crs"]

@@ -109,6 +109,7 @@ const LOCATION: LocationResponse = {
   model: "XGBoost",
   dataset_mode: "fallback",
   aod_used: false,
+  aod_info: null,
 };
 
 const STATIONS: Station[] = [
@@ -175,6 +176,7 @@ const NODATA_LOCATION: LocationResponse = {
   model: "XGBoost",
   dataset_mode: "fallback",
   aod_used: false,
+  aod_info: null,
 };
 
 function clickTab(name: "Overview" | "Model & Data" | "System") {
@@ -447,7 +449,7 @@ describe("App dashboard", () => {
   it("shows Select a location in metric cards before any selection", async () => {
     render(<App />);
     await waitFor(() => {
-      expect(screen.getAllByText("Select a location").length).toBe(2);
+      expect(screen.getAllByText("Select a location").length).toBe(3);
     });
   });
 

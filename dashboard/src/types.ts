@@ -44,6 +44,14 @@ export interface AQIResponse {
   type: string;
 }
 
+export interface AODInfo {
+  aod: number | null;
+  source: string;
+  resolution_m: number;
+  crs: string | null;
+  date: string | null;
+}
+
 export interface LocationResponse {
   date: string;
   location: { latitude: number; longitude: number };
@@ -57,6 +65,7 @@ export interface LocationResponse {
   model: string;
   dataset_mode: string;
   aod_used: boolean;
+  aod_info: AODInfo | null;
 }
 
 export interface HotspotProperties {

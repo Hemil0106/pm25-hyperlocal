@@ -26,6 +26,7 @@ from src.config import get_project_root, load_config
 from api.globalization import router as globalization_router
 from api.data import router as global_data_router
 from api.schemas import (
+    AODInfo,
     AQIResponse,
     DateResponse,
     FeatureImportanceResponse,
@@ -419,6 +420,25 @@ def get_location(
     model_name = model_meta.get("model_type") or model_meta.get("model") or "XGBoost"
     dataset_mode = model_meta.get("dataset_mode", "unknown")
     aod_used = bool(model_meta.get("aod_available", False))
+
+    aod_info = None
+    aod_path = d / AOD_500M_PATTERN.format(date=str(date))
+    if aod_path.exists():
+        try:
+            aod_value = _sample_raster(aod_path, lon, lat)
+            _, aod_transform, aod_nodata, aod_crs, aod_bounds = _read_raster(str(aod_path))
+            aod_info = AODInfo(
+                aod=None if aod_value is None else round(aod_value, 4),
+                source="MODIS/MAIAC MCD19A2 v061",
+                resolution_m=500,
+                crs=aod_crs,
+                date=str(date),
+            )
+            if aod_value is not None:
+                aod_used = True
+        except Exception:
+            aod_info = AODInfo(aod=None, source="MODIS/MAIAC MCD19A2 v061", resolution_m=500)
+
     return LocationResponse(
         date=str(date),
         location={"latitude": lat, "longitude": lon},
@@ -432,6 +452,7 @@ def get_location(
         model=model_name,
         dataset_mode=dataset_mode,
         aod_used=aod_used,
+        aod_info=aod_info,
     )
 
 
