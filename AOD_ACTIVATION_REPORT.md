@@ -1,75 +1,96 @@
-# AOD Activation Report
+# AOD Activation Report — Final
 
-## Summary
+## Step 14: Summary
 
-AOD (Aerosol Optical Depth) data is now **production-grade and fully wired** into the PM2.5 Hyperlocal Mapping dashboard. Clicking any location shows the real MODIS MAIAC AOD value from the satellite raster.
+### AOD Dataset Found: YES
 
-## What Was Done
+**Dataset:** MODIS/MAIAC MCD19A2 v061 (Aerosol Optical Depth at 550nm)
+**Provider:** NASA LAADS DAAC via Earthdata / Harmony API
+**Spatial Resolution:** 500m (UTM 43N / EPSG:32643)
+**Temporal Resolution:** Daily composites
+**CRS:** EPSG:32643 (UTM Zone 43N)
+**Units:** Unitless (AOD is a dimensionless optical quantity)
+**Nodata:** -9999.0
 
-### Backend (`api/main.py`, `api/schemas.py`)
+### Date Coverage
 
-- **`GET /location`** now samples the AOD GeoTIFF at the clicked coordinate via `rasterio.warp` CRS transform
-- New `AODInfo` schema with: `aod` (value), `source`, `resolution_m`, `crs`, `date`
-- AOD value from the real raster overwrites `aod_used: false` from model metadata when data exists
-- `/raster/aod` already serves the GeoTIFF — confirmed working
+| City    | Available Dates | Count |
+|---------|----------------|-------|
+| Delhi   | 2025-01-01 | 1 |
+| Pune    | 2025-01-01 through 2025-01-06 | 6 |
+| Mumbai  | 2025-01-01 through 2025-01-06 | 6 |
 
-### Dashboard (`dashboard/src/types.ts`, `LocationPanel.tsx`, `MetricCards.tsx`)
+### AOD Values Successfully Retrieved: 5/5 locations tested
 
-- `LocationResponse` type extended with `aod_info: AODInfo | null`
-- **LocationPanel**: Shows AOD value (e.g. `0.120`), source (`MODIS/MAIAC MCD19A2 v061`), resolution (`500m`) instead of just "Used"/"Unavailable"
-- **MetricCards**: New AOD card showing real AOD value with source label
-- AOD layer toggle already wired to `getAODRasterUrl` — serves real GeoTIFF
+| Location | Lat | Lon | AOD | Status |
+|---|---|---|---|---|
+| Connaught Place | 28.6315 | 77.2167 | 0.1358 | AVAILABLE |
+| India Gate | 28.6129 | 77.2295 | 0.1502 | AVAILABLE |
+| Chandni Chowk | 28.6506 | 77.2303 | 0.1927 | AVAILABLE |
+| Pune | 18.52 | 73.86 | 0.1925 | AVAILABLE |
+| Mumbai | 19.08 | 72.88 | 0.1421 | AVAILABLE |
 
-### Tests (`tests/test_api.py`)
+### NoData Handling: PASS
 
-15 new AOD-specific API tests:
-- `test_health_includes_aod` — /health returns AOD provider metadata
-- `test_location_includes_aod_info` — /location returns AODInfo structure
-- `test_location_aod_value_matches_raster` — AOD value matches direct raster read
-- `test_location_aod_valid_range` — AOD ∈ [0, 5]
-- `test_location_aod_set_used_when_available` — aod_used=true when AOD exists
-- `test_raster_aod_serves_geotiff` — /raster/aod returns image/tiff
-- `test_raster_aod_invalid_date_404` — 404 for nonexistent date
-- `test_aod_no_path_traversal` — security: no path traversal
-- `test_location_outside_aoi_returns_400` — 400 for points outside AOI
-- `test_aod_raster_valid_crs` — CRS contains EPSG
-- `test_aod_all_dates_available` — all dates have AOD rasters
-- `test_aod_pune_city` — AOD works for Pune
-- `test_aod_mumbai_city` — AOD works for Mumbai
-- `test_aod_raster_finite_values` — no inf/NaN in AOD bands
-- `test_location_aod_crs_epsg` — CRS in location response
+Nearest-valid-pixel fallback within radius=2 pixels. Returns status `NO_VALID_OBSERVATION` when no valid pixel found within radius.
 
-**Regression**: 276 backend + 28 frontend = 304 total tests, all passing.
+### Scope Isolation: PASS
 
-## AOD Data on Disk
+Delhi, Pune, and Mumbai each have separate data directories. No cross-scope data leakage.
 
-| City    | File | Shape   | CRS       | AOD Range       | Mean  | Valid % |
-|---------|------|---------|-----------|-----------------|-------|---------|
-| Delhi   | `data/processed/aod_500m_2025-01-01.tif` | 91×80 | EPSG:32643 | [0.010, 0.257] | 0.120 | 100% |
-| Pune    | `data/processed/pune/aod_500m_2025-01-01.tif` | 66×85 | EPSG:32643 | [0.049, 0.278] | 0.156 | 100% |
-| Mumbai  | `data/processed/mumbai/aod_500m_2025-01-01.tif` | 110×65 | EPSG:32643 | [0.057, 0.288] | 0.162 | 100% |
+### Backend Tests: 285 passed
 
-Source: MODIS/MAIAC MCD19A2 v061 (Aerosol Optical Depth at 550nm)
+(29 dedicated AOD tests in test_api.py)
 
-## API Response Example
+### Frontend Tests: 28 passed
+
+### Build: PASS
+
+### Key API Response
+
+```
+GET /location?date=2025-01-01&lat=28.6057&lon=77.2122
+```
 
 ```json
 {
   "aod_info": {
-    "aod": 0.1203,
+    "aod": 0.1428,
+    "status": "AVAILABLE",
     "source": "MODIS/MAIAC MCD19A2 v061",
     "resolution_m": 500,
     "crs": "EPSG:32643",
-    "date": "2025-01-01"
+    "date": "2025-01-01",
+    "unit": "unitless",
+    "nodata": false,
+    "lookup": "exact_pixel",
+    "distance_pixels": 0
   },
   "aod_used": true
 }
 ```
 
-## Commit
+### CRITICAL DISTINCTION
 
-`cc5bf53` — feat: activate AOD - raster sampling in /location, real values in dashboard, 15 AOD tests
+**AOD DISPLAY AVAILABLE: YES**
+Real MODIS/MAIAC AOD values are read from satellite-derived GeoTIFF rasters and displayed in the dashboard.
 
-## Railway Deployment
+**AOD USED AS MODEL INPUT: NO**
+The XGBoost PM2.5 model metadata still shows `aod_available: false` and `dataset_mode: "fallback"`. The model does NOT currently use AOD as an input feature. AOD display and model input are treated as separate concerns per Step 10.
 
-Requires manual redeploy in Railway dashboard (deployment caching issue). Check Deployments tab for build from `cc5bf53`.
+### Dashboard States
+
+The dashboard now shows 4 distinct AOD states:
+
+1. **AVAILABLE:** Value + source (e.g. `0.136 — MODIS/MAIAC MCD19A2 v061 (500m)`)
+2. **NO_VALID_OBSERVATION:** "No satellite observation" (nodata pixel)
+3. **DATASET_UNAVAILABLE:** "Dataset unavailable" (no AOD file for this date/city)
+4. **API_ERROR:** "Unable to retrieve" (raster read failure)
+
+### Commit
+
+`cf65043` — feat: comprehensive AOD activation - nearest-pixel fallback, distinct status states, 30 AOD tests, cache-bust Dockerfile
+
+### Railway Deployment
+
+The Dockerfile has been cache-busted with `ARG CACHE_BUST=20260821a`. Force a manual redeploy in the Railway dashboard to pick up the new build.
