@@ -60,7 +60,7 @@ AOD_500M_PATTERN = "aod_500m_{date}.tif"
 RESOLUTION_MAP = {"500": 500, "1000": 1000}
 DEFAULT_RESOLUTION_M = 500
 SERVICE_NAME = "pm25-mapping-api"
-API_VERSION = "0.1.0"
+API_VERSION = "0.1.1"
 PM25_UNITS = "\u00b5g/m\u00b3"
 AQI_TYPE = "PM2.5-derived AQI/sub-index"
 
@@ -570,6 +570,13 @@ def get_uncertainty(city: str | None = Query(None)):
 # ---------------------------------------------------------------------------
 # Raster serving (controlled, known files only)
 # ---------------------------------------------------------------------------
+@app.get("/raster/aod", tags=["raster"])
+def serve_aod_raster(date: date, city: str | None = Query(None)):
+    """Serve MODIS/MAIAC AOD GeoTIFF for the given date and city."""
+    path = _check_date_available(date, AOD_500M_PATTERN, city)
+    return FileResponse(path, media_type="image/tiff")
+
+
 @app.get("/raster/pm25", tags=["raster"])
 def serve_pm25_raster(date: date, resolution: str = "500m", city: str | None = Query(None)):
     res_m = _resolve_resolution(resolution)
@@ -581,13 +588,6 @@ def serve_pm25_raster(date: date, resolution: str = "500m", city: str | None = Q
 @app.get("/raster/aqi", tags=["raster"])
 def serve_aqi_raster(date: date, city: str | None = Query(None)):
     path = _check_date_available(date, AQI_500M_PATTERN, city)
-    return FileResponse(path, media_type="image/tiff")
-
-
-@app.get("/raster/aod", tags=["raster"])
-def serve_aod_raster(date: date, city: str | None = Query(None)):  # noqa: D401
-    """Serve MODIS/MAIAC AOD GeoTIFF for the given date and city."""
-    path = _check_date_available(date, AOD_500M_PATTERN, city)
     return FileResponse(path, media_type="image/tiff")
 
 
