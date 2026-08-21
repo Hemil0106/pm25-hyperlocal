@@ -28,6 +28,7 @@ import { DataSourcesPanel } from "./components/DataSourcesPanel";
 import { LimitationsPanel } from "./components/LimitationsPanel";
 import { MethodologyPanel } from "./components/MethodologyPanel";
 import { GlobalStatusPanel } from "./components/GlobalStatusPanel";
+import { DataQualityIndicator } from "./components/DataQualityIndicator";
 import { Footer } from "./components/Footer";
 import { LayerControl, HotspotSummary } from "./components/LayerControl";
 import { Legend } from "./components/Legend";
@@ -787,6 +788,7 @@ export default function App() {
           {sidebarTab === "system" && (
             <div className="sidebar-panel-group">
               <MethodologyPanel />
+              <DataQualityIndicator city={selectedRegion} />
               <DataSourcesPanel
                 globalDataStatus={globalDataStatus}
                 loading={globalDataLoading}

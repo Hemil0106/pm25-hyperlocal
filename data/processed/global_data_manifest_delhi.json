@@ -7,59 +7,123 @@
     "east": 77.4,
     "north": 28.8
   },
-  "timestamp": "2026-08-15T13:13:47Z",
+  "timestamp": "2026-08-21T01:28:29Z",
   "source_statuses": {
-    "aod": "unavailable",
-    "dem": "unavailable",
-    "ndvi": "unavailable",
-    "osm": "failed",
-    "pm25": "unavailable",
-    "viirs": "unavailable",
-    "weather": "unavailable"
+    "aod": "available",
+    "dem": "available",
+    "ndvi": "available",
+    "osm": "available",
+    "pm25": "available",
+    "viirs": "available",
+    "weather": "available"
   },
-  "artifacts": [],
+  "artifacts": [
+    {
+      "source": "pm25",
+      "path": "data\\processed\\global\\stations\\global_station_registry.parquet",
+      "sha256": "1ec89ee4ebbbb8f1a3b5a764606706eca217522462004fe905699b36928cf604"
+    },
+    {
+      "source": "pm25",
+      "path": "data\\processed\\global\\stations\\global_station_summary.parquet",
+      "sha256": "556f31a02c84cd1d24ec8ef2b89b55e31e52a6d5c8c24e52556bbae3efc7820e"
+    },
+    {
+      "source": "aod",
+      "path": "data\\raw\\global\\aod\\delhi\\tile_000_000\\MCD19A2.hdf",
+      "sha256": "8ecde5b6365edbe3d90765b3623396b284f7083bc0535bb7208ae42e07f2cff7"
+    },
+    {
+      "source": "weather",
+      "path": "data\\raw\\global\\weather\\delhi\\tile_000_000\\era5_land_2025-01-01.nc",
+      "sha256": "608c471e2a2ef945ce5ac9601762b9b481c4a8368c69e746a68389daa8192725"
+    },
+    {
+      "source": "ndvi",
+      "path": "data\\raw\\global\\ndvi\\delhi\\tile_000_000\\2024-12-20\\MOD13Q1_2024-12-20.tif",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "dem",
+      "path": "data\\raw\\global\\dem\\delhi\\N28E077.hgt",
+      "sha256": "ad420a69aeaa68ce3447d9e07b2fdaea5972c4b11147a7824f1aa1b3f3a8123f"
+    },
+    {
+      "source": "osm",
+      "path": "data\\raw\\global\\osm\\delhi\\roads_tile_000_000.json",
+      "sha256": "0d60167fe8d133384431139c96ef5da7877db20664acdd51732d57c3f8f4e188"
+    },
+    {
+      "source": "viirs",
+      "path": "data\\raw\\global\\viirs\\delhi\\tile_000_000\\VNP46A2_2025-01-01.tif",
+      "sha256": "03fa70f704694eb98d55ae8fb05b3f92efe7ad6e3f7fc10b8262a494cc63d07d"
+    }
+  ],
   "coverage_report": {
     "report_version": 1,
     "built_for_scope": "delhi",
-    "timestamp": "2026-08-15T13:13:47Z",
+    "timestamp": "2026-08-21T01:28:29Z",
     "observations": {
-      "n_observations": null,
-      "n_daily_rows": null,
-      "n_stations": null,
-      "countries": [],
-      "date_range": null,
-      "qc": {}
+      "n_observations": 12,
+      "n_daily_rows": 12,
+      "n_stations": 2,
+      "countries": [
+        "IN"
+      ],
+      "date_range": {
+        "min": "2024-12-31",
+        "max": "2025-01-06"
+      },
+      "qc": {
+        "input_rows": 12,
+        "retained_rows": 12,
+        "duplicate_rows": 0,
+        "invalid_coordinates": 0,
+        "missing_pm25": 0,
+        "invalid_units": 0,
+        "negative_pm25": 0,
+        "outlier_flags": 0,
+        "station_count": 2,
+        "country_count": 1,
+        "date_range": {
+          "min": "2024-12-31",
+          "max": "2025-01-06"
+        }
+      }
     },
     "sources": {
       "aod": {
         "name": "aod",
-        "status": "UNAVAILABLE",
+        "status": "AVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
-          "tiles_completed": 0,
+          "tiles_completed": 1,
           "tiles_failed": 0,
-          "artifacts": []
+          "artifacts": [
+            "data\\raw\\global\\aod\\delhi\\tile_000_000\\MCD19A2.hdf"
+          ]
         }
       },
       "dem": {
         "name": "dem",
-        "status": "UNAVAILABLE",
+        "status": "AVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
-          "tiles_completed": 0,
+          "tiles_completed": 1,
           "tiles_failed": 0,
-          "artifacts": [],
+          "artifacts": [
+            "data\\raw\\global\\dem\\delhi\\N28E077.hgt"
+          ],
           "nodata": -32768
         }
       },
       "ndvi": {
         "name": "ndvi",
-        "status": "UNAVAILABLE",
+        "status": "AVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
-          "tiles_completed": 0,
+          "tiles_completed": 1,
           "tiles_failed": 0,
-          "artifacts": [],
+          "artifacts": [
+            "data\\raw\\global\\ndvi\\delhi\\tile_000_000\\2024-12-20\\MOD13Q1_2024-12-20.tif"
+          ],
           "composite_metadata": {
             "target_date": "2025-01-01",
             "ndvi_date": "2024-12-20",
@@ -70,28 +134,29 @@
       },
       "osm": {
         "name": "osm",
-        "status": "UNAVAILABLE",
+        "status": "AVAILABLE",
         "details": {
-          "tiles_completed": 0,
-          "tiles_failed": 1,
-          "artifacts": []
+          "tiles_completed": 1,
+          "tiles_failed": 0,
+          "artifacts": [
+            "data\\raw\\global\\osm\\delhi\\roads_tile_000_000.json"
+          ]
         }
       },
       "pm25": {
         "name": "pm25",
         "status": "UNAVAILABLE",
-        "details": {
-          "reason": "OpenAQ v3 requires an API key; set OPENAQ_API_KEY (environment only)."
-        }
+        "details": {}
       },
       "viirs": {
         "name": "viirs",
-        "status": "UNAVAILABLE",
+        "status": "AVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
-          "tiles_completed": 0,
+          "tiles_completed": 1,
           "tiles_failed": 0,
-          "artifacts": [],
+          "artifacts": [
+            "data\\raw\\global\\viirs\\delhi\\tile_000_000\\VNP46A2_2025-01-01.tif"
+          ],
           "qa": {
             "flag_band": "Mandatory_Quality_Flag",
             "keep_quality": [
@@ -102,12 +167,13 @@
       },
       "weather": {
         "name": "weather",
-        "status": "UNAVAILABLE",
+        "status": "AVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
-          "tiles_completed": 0,
+          "tiles_completed": 1,
           "tiles_failed": 0,
-          "artifacts": []
+          "artifacts": [
+            "data\\raw\\global\\weather\\delhi\\tile_000_000\\era5_land_2025-01-01.nc"
+          ]
         }
       }
     },
@@ -117,7 +183,7 @@
   "synthetic_data_leakage": "NONE",
   "scope_isolation": {
     "policy": "requested_scope == artifact_scope; artifacts outside the requested scope are refused.",
-    "verified": "NONE"
+    "verified": "OK"
   },
   "ml_not_implemented": "Global ML training is NOT part of Milestone 16. This manifest describes acquired data only; no predictions are produced."
 }

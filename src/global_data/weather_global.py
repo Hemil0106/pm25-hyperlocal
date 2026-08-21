@@ -28,14 +28,13 @@ def check_availability(config) -> dict:
 def _cds_request_payload(tile: dict, date: str, variables) -> dict:
     """Build the ERA5-Land CDS API request body for a chunk (tile)."""
     return {
-        "product_type": "reanalysis",
         "variable": variables,
         "year": date[:4],
         "month": date[5:7],
         "day": date[8:10],
         "time": [f"{h:02d}:00" for h in range(0, 24, 6)],
         "area": [tile["north"], tile["west"], tile["south"], tile["east"]],
-        "data_format": "netcdf",
+        "format": "netcdf",
     }
 
 
@@ -53,10 +52,7 @@ def acquire(config, scope: str = "global", date: str = "2025-01-01") -> dict:
         if dest.exists():
             return dest
 
-        import json
         import os
-
-        import requests
 
         variables = config.get("datasets", {}).get("weather", {}).get(
             "variables",
@@ -65,29 +61,26 @@ def acquire(config, scope: str = "global", date: str = "2025-01-01") -> dict:
         )
         url = os.environ.get("CDSAPI_URL", "https://cds.climate.copernicus.eu/api")
         key = os.environ.get("CDSAPI_KEY", "")
+
+        import cdsapi
+
+        import time as _time
+
+        client = cdsapi.Client(url=url, key=key)
         payload = _cds_request_payload(tile_bbox, _date, variables)
+        logger.info("Weather: CDS request for tile %s payload=%s", tile_id, payload)
 
-        # CDS API v2: submit a retrieval job, then poll for the result.
-        auth = requests.auth.HTTPBasicAuth(key.split(":")[0], key.split(":")[1] if ":" in key else key)
-        response = requests.post(f"{url.rstrip('/')}/retrieve", json=payload, auth=auth, timeout=60)
-        response.raise_for_status()
-        job = response.json()
-        job_url = f"{url.rstrip('/')}/tasks/{job['request_id']}"
-
-        import time
-
-        for _ in range(120):
-            state = requests.get(job_url, auth=auth, timeout=60).json()
-            if state.get("state") == "completed":
-                break
-            time.sleep(5)
-        else:
-            raise TimeoutError(f"CDS job {job['request_id']} did not complete.")
-
-        download_url = state.get("links", [{}])[0].get("href")
-        if not download_url:
-            raise RuntimeError("CDS job completed without a download link.")
-        source._download(download_url, dest, tile, _date)
-        return dest
+        for attempt in range(3):
+            try:
+                client.retrieve("reanalysis-era5-land", payload, str(dest))
+                return dest
+            except Exception as exc:
+                if attempt < 2:
+                    wait = 30 * (attempt + 1)
+                    logger.warning("Weather CDS attempt %d failed: %s; retry in %ds",
+                                   attempt + 1, exc, wait)
+                    _time.sleep(wait)
+                else:
+                    raise
 
     return source.attempt_acquire(scope, date, on_tile)

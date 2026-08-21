@@ -29,6 +29,7 @@ vi.mock("./api", () => ({
   getDataAvailability: vi.fn(),
   getOutputMetadata: vi.fn(),
   getGlobalDataStatus: vi.fn(),
+  getAvailabilityRegistry: vi.fn().mockRejectedValue(new Error("mock: no backend")),
   getPM25RasterUrl: vi.fn((_date: string, resolution: string) => `/raster/pm25?resolution=${resolution}`),
   getAQIRasterUrl: vi.fn(() => "/raster/aqi"),
   getAODRasterUrl: vi.fn(() => "/raster/aod"),

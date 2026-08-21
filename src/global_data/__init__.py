@@ -1,4 +1,4 @@
-"""Milestone 16: Global Data Acquisition + Normalized Observation Pipeline.
+"""Global Data Acquisition + Normalized Observation Pipeline.
 
 Data engineering ONLY. No ML training, no global prediction, no AQI/hotspot
 rasters. Real sources are acquired with credentials from the environment only;
@@ -6,6 +6,14 @@ missing credentials produce graceful UNAVAILABLE status with no fabricated or
 substituted data.
 """
 
+from .availability import (
+    STATUS_AVAILABLE,
+    STATUS_FAILED,
+    STATUS_PARTIAL,
+    STATUS_STALE,
+    STATUS_UNAVAILABLE,
+    build_availability_registry,
+)
 from .ingest import ensure_global_dirs, run_global_data_pipeline
 from .scope import (
     SCOPE_BOUNDS,
@@ -25,7 +33,13 @@ __all__ = [
     "SCOPE_BOUNDS",
     "SUPPORTED_SCOPES",
     "DATA_SOURCE_REGISTRY",
+    "STATUS_AVAILABLE",
+    "STATUS_FAILED",
+    "STATUS_PARTIAL",
+    "STATUS_STALE",
+    "STATUS_UNAVAILABLE",
     "assert_scope_isolated",
+    "build_availability_registry",
     "build_data_source_registry",
     "credential_available",
     "ensure_global_dirs",

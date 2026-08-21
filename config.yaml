@@ -52,12 +52,10 @@ datasets:
     enabled: true
     source: "ERA5-Land"
     variables:
-      - temperature
-      - relative_humidity
-      - wind_u
-      - wind_v
-      - wind_speed
-      - wind_direction
+      - 2m_temperature
+      - 2m_relative_humidity
+      - 10m_u_component_of_wind
+      - 10m_v_component_of_wind
     temporal_resolution: "hourly"
     aggregation: "daily"
     input_file: "data/raw/weather/era5_land.nc"
@@ -495,3 +493,24 @@ global_data:
       product: "NASA_VIIRS_VNP46A2_v2.0"
       credential_env_var: "EARTHDATA_USERNAME"
       credential_env_var_2: "EARTHDATA_PASSWORD"
+
+# ---------------------------------------------------------------------------
+# GLOBAL TRAINING LAYER (Milestone 17 + Stage 3 Enhancement)
+# Readiness gate thresholds are configurable here. All thresholds must be
+# met for model training to proceed. Readiness is fully data-derived and
+# never auto-YES.
+# ---------------------------------------------------------------------------
+global_training:
+  readiness:
+    thresholds:
+      min_complete_rows: 1000
+      min_stations: 20
+      min_countries: 5
+      min_temporal_days: 30
+      min_unique_latitudes: 3
+      min_unique_longitudes: 3
+      min_daily_completeness_pct: 50.0
+      max_outlier_ratio: 0.10
+      max_missing_target_ratio: 0.05
+      min_feature_sources_ready: 4
+      freshness_max_age_days: 365

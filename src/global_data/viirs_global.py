@@ -44,13 +44,22 @@ def acquire(config, scope: str = "global", date: str = "2025-01-01") -> dict:
         dest = out_dir / f"VNP46A2_{_date}.tif"
         if dest.exists():
             return dest
-        center_lat = (tile_bbox["south"] + tile_bbox["north"]) / 2.0
-        center_lon = (tile_bbox["west"] + tile_bbox["east"]) / 2.0
-        url = (
-            "https://ladsweb.modaps.eosdis.nasa.gov/api/v2/content/details/"
-            f"VNP46A2.002/{_date}?center={center_lat},{center_lon}"
+        from .nasa_auth import (cmr_search_granules, find_download_url,
+                                 download_with_earthdata)
+
+        _VNP46A2_CID = "C3365931269-LAADS"
+        granules = cmr_search_granules(
+            _VNP46A2_CID,
+            bbox=tile_bbox,
+            temporal_start=_date,
+            temporal_end=_date,
         )
-        source._download(url, dest, tile, _date)
+        url = find_download_url(granules)
+        if not url:
+            raise RuntimeError(
+                f"No VNP46A2 granule found for tile {tile_id} on {_date}")
+
+        download_with_earthdata(url, str(dest))
         return dest
 
     report = source.attempt_acquire(scope, date, on_tile)

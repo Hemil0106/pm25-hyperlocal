@@ -18,6 +18,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from src.global_data.availability import build_availability_registry
 from src.global_data.scope import validate_scope
 
 from .builder import (
@@ -81,7 +82,14 @@ def run_global_training_pipeline(config, scope: str = "global",
     target = target_report(table, config)
     representativeness_report = representativeness(table)
     validation_groups = write_validation_outputs(table, config) if write else {}
-    readiness = build_readiness(table, config)
+
+    # Load availability registry for freshness/confidence checks in readiness gate
+    try:
+        availability_registry = build_availability_registry(config, scope=scope)
+    except Exception:
+        availability_registry = None
+
+    readiness = build_readiness(table, config, availability_registry=availability_registry)
 
     artifacts: dict = {}
     if write:

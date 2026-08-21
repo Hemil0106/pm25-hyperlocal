@@ -51,12 +51,22 @@ def acquire(config, scope: str = "global", date: str = "2025-01-01") -> dict:
         dest = out_dir / f"{name}.hgt"
         if dest.exists():
             return dest
-        # NASA LP DAAC Cloud (SRTMGL1.003) download URL.
-        url = (
-            "https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/"
-            f"{name}.SRTMGL1.hgt.zip"
+        # NASA LP DAAC Cloud (SRTMGL1.003) download via CMR search.
+        from .nasa_auth import (cmr_search_granules, find_download_url,
+                                 download_with_earthdata, earthdata_auth_headers)
+
+        _SRTM_CID = "C2763266360-LPCLOUD"
+        granules = cmr_search_granules(
+            _SRTM_CID,
+            bbox=tile_bbox,
+            page_size=5,
         )
-        source._download(url, dest, tile, _date)
+        url = find_download_url(granules)
+        if not url:
+            raise RuntimeError(
+                f"No SRTM granule found for tile {tile_id}")
+        download_with_earthdata(url, str(dest),
+                                extra_headers=earthdata_auth_headers())
         return dest
 
     report = source.attempt_acquire(scope, date, on_tile)

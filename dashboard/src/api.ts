@@ -1,6 +1,7 @@
 import type {
   AOIInfoResponse,
   AQIResponse,
+  AvailabilityRegistryResponse,
   DataAvailabilityResponse,
   DateResponse,
   FeatureImportanceResponse,
@@ -158,3 +159,6 @@ export const getGlobalDataStatus = (scope: string = "global") =>
 
 export const getGlobalDataAvailability = (scope: string = "global") =>
   request<GlobalDataAvailabilityResponse>(`/data/availability?scope=${encodeURIComponent(scope)}`);
+
+export const getAvailabilityRegistry = (scope: string = "global") =>
+  request<AvailabilityRegistryResponse>(`/data/availability?scope=${encodeURIComponent(scope)}`);

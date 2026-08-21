@@ -1,42 +1,122 @@
 {
+  "report_version": 2,
   "scope": "global",
+  "timestamp": "2026-08-21T01:18:23Z",
   "thresholds": {
     "min_complete_rows": 1000,
     "min_stations": 20,
     "min_countries": 5,
-    "min_temporal_days": 30
+    "min_temporal_days": 30,
+    "min_unique_latitudes": 3,
+    "min_unique_longitudes": 3,
+    "min_daily_completeness_pct": 50.0,
+    "max_outlier_ratio": 0.1,
+    "max_missing_target_ratio": 0.05,
+    "min_feature_sources_ready": 4,
+    "freshness_max_age_days": 365
   },
   "measured": {
     "complete_case_rows": 0,
     "stations": 0,
     "countries": 0,
     "temporal_days": 0,
-    "date_range": null
+    "date_range": null,
+    "total_rows": 0
   },
-  "sources": {
-    "pm25": {
-      "present": false
+  "checks": {
+    "complete_case_rows": {
+      "pass": false,
+      "measured": 0,
+      "threshold": 1000,
+      "reason": "0 < 1000"
     },
-    "aod": {
-      "present": false
+    "stations": {
+      "pass": false,
+      "measured": 0,
+      "threshold": 20,
+      "reason": "0 < 20"
     },
-    "weather": {
-      "present": false
+    "countries": {
+      "pass": false,
+      "measured": 0,
+      "threshold": 5,
+      "reason": "0 < 5"
     },
-    "ndvi": {
-      "present": false
+    "temporal_days": {
+      "pass": false,
+      "measured": 0,
+      "threshold": 30,
+      "date_range": null,
+      "reason": "0 < 30"
     },
-    "dem": {
-      "present": false
+    "spatial_coverage": {
+      "pass": true,
+      "unique_latitudes": 0,
+      "unique_longitudes": 0,
+      "reason": null
     },
-    "osm": {
-      "present": false
+    "temporal_coverage": {
+      "pass": true,
+      "daily_completeness_pct": 0.0,
+      "unique_dates": 0,
+      "reason": null
     },
-    "viirs": {
-      "present": false
+    "quality_flags": {
+      "pass": true,
+      "outlier_ratio": 0.0,
+      "missing_target_ratio": 0.0,
+      "reason": null
+    },
+    "source_coverage": {
+      "pm25": {
+        "pass": false,
+        "coverage_pct": 0.0,
+        "reason": "empty_dataframe"
+      },
+      "aod": {
+        "pass": false,
+        "coverage_pct": 0.0,
+        "reason": "empty_dataframe"
+      },
+      "weather": {
+        "pass": false,
+        "coverage_pct": 0.0,
+        "reason": "empty_dataframe"
+      },
+      "ndvi": {
+        "pass": false,
+        "coverage_pct": 0.0,
+        "reason": "empty_dataframe"
+      },
+      "dem": {
+        "pass": false,
+        "coverage_pct": 0.0,
+        "reason": "empty_dataframe"
+      },
+      "osm": {
+        "pass": false,
+        "coverage_pct": 0.0,
+        "reason": "empty_dataframe"
+      },
+      "viirs": {
+        "pass": false,
+        "coverage_pct": 0.0,
+        "reason": "empty_dataframe"
+      }
+    },
+    "feature_sources_ready": {
+      "pass": false,
+      "measured": 0,
+      "threshold": 7,
+      "reason": "insufficient coverage for: pm25, aod, weather, ndvi, dem, osm, viirs"
+    },
+    "data_freshness": {
+      "pass": true,
+      "reason": "availability_registry_not_provided_assumed_fresh"
     }
   },
   "model_training_ready": "NO",
-  "reason": "complete-case rows 0 < 1000; stations 0 < 20; countries 0 < 5; temporal days 0 < 30; source 'pm25' feature coverage insufficient; source 'aod' feature coverage insufficient; source 'weather' feature coverage insufficient; source 'ndvi' feature coverage insufficient; source 'dem' feature coverage insufficient; source 'osm' feature coverage insufficient; source 'viirs' feature coverage insufficient",
-  "rule": "Readiness is fully data-derived and never auto-YES."
+  "readiness_score": 40.0,
+  "reason": "0 < 1000; 0 < 20; 0 < 5; 0 < 30; insufficient coverage for: pm25, aod, weather, ndvi, dem, osm, viirs",
+  "rule": "Readiness is fully data-derived and never auto-YES. All checks must pass for model training to proceed."
 }

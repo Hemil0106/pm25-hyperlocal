@@ -137,6 +137,8 @@ export interface UncertaintyResponse {
   reason: string | null;
   data_requirements: string[] | null;
   future_method: string | null;
+  uncertainty_score?: number | null;
+  sources?: Record<string, unknown>;
 }
 
 export type MapQuadCoordinates = [
@@ -307,4 +309,65 @@ export interface GlobalDataStatusResponse {
   synthetic_data_leakage: string;
   ml_not_implemented: boolean;
   prediction_not_implemented: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Production-grade availability registry (Stage 1)
+// ---------------------------------------------------------------------------
+
+export interface SourceFreshness {
+  last_fetch_timestamp: string | null;
+  window_s: number | null;
+  fresh: boolean | null;
+  stale_reason: string | null;
+  age_s: number | null;
+}
+
+export interface SourceConfidence {
+  level: "HIGH" | "MEDIUM" | "LOW" | "NONE";
+  reason: string | null;
+}
+
+export interface AvailabilitySourceEntry {
+  id: string;
+  name: string;
+  type: string;
+  coverage: string;
+  enabled: boolean;
+  status: "AVAILABLE" | "PARTIAL" | "UNAVAILABLE" | "FAILED" | "STALE";
+  reason: string | null;
+  credentials_required: string[];
+  credentials_present: Record<string, boolean>;
+  freshness: SourceFreshness;
+  confidence: SourceConfidence;
+  artifact_checksums: Record<string, string> | null;
+  notes: string;
+}
+
+export interface ReadinessSummary {
+  available_source_count: number;
+  total_source_count: number;
+  pm25_ground_truth_available: boolean;
+  has_any_real_data: boolean;
+  all_sources_unavailable: boolean;
+}
+
+export interface AvailabilityRegistryResponse {
+  registry_version: number;
+  built_for_scope: string;
+  timestamp: string;
+  overall_status: "AVAILABLE" | "PARTIAL" | "UNAVAILABLE" | "FAILED" | "STALE";
+  sources: Record<string, AvailabilitySourceEntry>;
+  readiness_summary: ReadinessSummary;
+  freshness_windows_s: Record<string, number>;
+  note: string;
+}
+
+export interface StaleSourceResponse {
+  scope: string;
+  overall: string;
+  available_sources: string[];
+  stale_sources: string[];
+  unavailable_sources: string[];
+  readiness_summary: ReadinessSummary | null;
 }

@@ -108,10 +108,17 @@ def run_global_data_pipeline(config, scope: str = "global",
     # -- PM2.5 (only when creds + network allow) -------------------------
     from .pm25_global import acquire_pm25
 
-    pm25_report = acquire_pm25(
-        config, scope=scope, start_date=start_date, end_date=end_date,
-        write=write, failed_downloads_path=failed_downloads_path,
-    )
+    try:
+        pm25_report = acquire_pm25(
+            config, scope=scope, start_date=start_date, end_date=end_date,
+            write=write, failed_downloads_path=failed_downloads_path,
+        )
+    except Exception as exc:
+        logger.error("PM2.5 acquisition crashed: %s", exc)
+        pm25_report = {
+            "source": "pm25", "scope": scope, "status": "failed",
+            "reason": str(exc), "observations_written": False,
+        }
 
     # -- Satellite adapters (tile-based, graceful) -----------------------
     target_date = (start_date or config.get("time", {}).get("start_date", "2025-01-01"))[:10]

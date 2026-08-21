@@ -7,15 +7,15 @@
     "east": 180.0,
     "north": 90.0
   },
-  "timestamp": "2026-08-15T13:13:17Z",
+  "timestamp": "2026-08-20T18:51:53Z",
   "source_statuses": {
-    "aod": "unavailable",
-    "dem": "unavailable",
-    "ndvi": "unavailable",
+    "aod": "failed",
+    "dem": "failed",
+    "ndvi": "failed",
     "osm": "available",
-    "pm25": "unavailable",
-    "viirs": "unavailable",
-    "weather": "unavailable"
+    "pm25": "failed",
+    "viirs": "failed",
+    "weather": "failed"
   },
   "artifacts": [
     {
@@ -37,7 +37,7 @@
   "coverage_report": {
     "report_version": 1,
     "built_for_scope": "global",
-    "timestamp": "2026-08-15T13:13:17Z",
+    "timestamp": "2026-08-20T18:51:53Z",
     "observations": {
       "n_observations": null,
       "n_daily_rows": null,
@@ -51,9 +51,8 @@
         "name": "aod",
         "status": "UNAVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
           "tiles_completed": 0,
-          "tiles_failed": 0,
+          "tiles_failed": 3,
           "artifacts": []
         }
       },
@@ -61,9 +60,8 @@
         "name": "dem",
         "status": "UNAVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
           "tiles_completed": 0,
-          "tiles_failed": 0,
+          "tiles_failed": 3,
           "artifacts": [],
           "nodata": -32768
         }
@@ -72,9 +70,8 @@
         "name": "ndvi",
         "status": "UNAVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
           "tiles_completed": 0,
-          "tiles_failed": 0,
+          "tiles_failed": 3,
           "artifacts": [],
           "composite_metadata": {
             "target_date": "2025-01-01",
@@ -101,16 +98,15 @@
         "name": "pm25",
         "status": "UNAVAILABLE",
         "details": {
-          "reason": "OpenAQ v3 requires an API key; set OPENAQ_API_KEY (environment only)."
+          "reason": "Download failed after retries: 404 Client Error: Not Found for url: https://api.openaq.org/v3/measurements?parameter=pm25&datetime_from=2025-01-01T00%3A00%3A00Z&datetime_to=2025-01-07T23%3A59%3A59Z&limit=1000&offset=0"
         }
       },
       "viirs": {
         "name": "viirs",
         "status": "UNAVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
           "tiles_completed": 0,
-          "tiles_failed": 0,
+          "tiles_failed": 3,
           "artifacts": [],
           "qa": {
             "flag_band": "Mandatory_Quality_Flag",
@@ -124,9 +120,8 @@
         "name": "weather",
         "status": "UNAVAILABLE",
         "details": {
-          "reason": "Credentials missing (env vars only). Set the required environment variables to enable acquisition.",
           "tiles_completed": 0,
-          "tiles_failed": 0,
+          "tiles_failed": 3,
           "artifacts": []
         }
       }

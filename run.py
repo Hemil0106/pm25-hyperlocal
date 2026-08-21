@@ -1,5 +1,8 @@
 import argparse
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from src.config import load_config, get_project_root
 from src.utils import (

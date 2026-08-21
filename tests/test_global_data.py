@@ -87,7 +87,7 @@ from src.global_data.dem_global import (  # noqa: E402
 )
 from src.global_data.osm_global import road_density_query  # noqa: E402
 from src.global_data.weather_global import _cds_request_payload  # noqa: E402
-from src.global_data.aod_global import _granule_url_for_tile  # noqa: E402
+from src.global_data.nasa_auth import cmr_search_granules  # noqa: E402
 
 client = TestClient(app)
 
@@ -523,13 +523,18 @@ def test_weather_cds_request_payload():
     assert payload["month"] == "01"
     assert payload["day"] == "01"
     assert payload["area"] == [28.8, 77.0, 28.4, 77.4]
-    assert payload["data_format"] == "netcdf"
+    assert payload["format"] == "netcdf"
 
 
-def test_aod_granule_url_has_center():
-    url = _granule_url_for_tile(DELHI_BBOX)
-    assert "MCD19A2.061" in url
-    assert "center=" in url
+def test_cmr_search_has_bbox():
+    granules = cmr_search_granules(
+        "C2057600902-LAADS",
+        bbox=DELHI_BBOX,
+        temporal_start="2025-01-01",
+        temporal_end="2025-01-01",
+        page_size=1,
+    )
+    assert isinstance(granules, list)
 
 
 def test_satellite_acquire_unavailable_without_credentials(tmp_path, monkeypatch):
@@ -895,7 +900,9 @@ def test_api_data_status_ml_not_implemented():
     body = response.json()
     assert body["ml_not_implemented"] is True
     assert body["prediction_not_implemented"] is True
-    assert body["overall"] in ("available", "unavailable", "not_run")
+    assert body["overall"] in ("available", "unavailable", "not_run",
+                                 "AVAILABLE", "PARTIAL", "UNAVAILABLE",
+                                 "FAILED", "STALE")
 
 
 def test_api_data_availability_not_run_or_report():

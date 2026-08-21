@@ -49,3 +49,5 @@ htmlcov/
 
 # Local Netlify folder
 .netlify
+
+.vercel

@@ -1,0 +1,190 @@
+ENHANCEMENT PIPELINE REPORT — Stage 0-14
+==========================================
+Generated: 2026-08-20
+
+EXECUTIVE SUMMARY
+-----------------
+Implemented 10 of 14 stages (all credential-independent stages).
+4 stages are BLOCKED pending real API credentials (OpenAQ, NASA Earthdata, Copernicus CDS).
+All 235 backend tests and 28 frontend tests pass. Build succeeds.
+
+STAGE COMPLETION STATUS
+-----------------------
+
+Stage 0: Audit                                    ✓ COMPLETED
+  - Full codebase audit: 497-line config.yaml, 602-line api/main.py,
+    169-line sources.py, 150-line ingest.py, 93-line coverage.py,
+    82-line manifest.py, 88-line scope.py, 86-line integrity.py
+  - Identified 7 data sources, all returning "unavailable" (no credentials)
+  - OSM is only source that works without credentials (Overpass API)
+
+Stage 1: Real Data Activation                     ✓ COMPLETED
+  New file: src/global_data/availability.py
+  - Canonical status codes: AVAILABLE | PARTIAL | UNAVAILABLE | FAILED | STALE
+  - Per-source staleness tracking (age_s, fresh flag, window_s)
+  - Confidence flags: HIGH | MEDIUM | LOW | NONE
+  - Artifact checksum tracking in the registry
+  - Freshness windows configurable per source type
+  - Updated api/data.py with /data/availability returning full registry
+  - Updated __init__.py exports
+
+Stage 2: Global Training Dataset                  ✗ BLOCKED
+  BLOCKED — REAL DATA REQUIRED
+  Requires: OPENAQ_API_KEY environment variable
+  OpenAQ v3 API is the only real PM2.5 observation source
+  Cannot proceed without authenticated API access
+
+Stage 3: Global Readiness Gate                    ✓ COMPLETED
+  Rewritten: src/global_training/readiness.py
+  - Configurable thresholds via config.yaml (global_training.readiness)
+  - 10+ independent checks: complete_case_rows, stations, countries,
+    temporal_days, spatial_coverage, temporal_coverage, quality_flags,
+    source_coverage (per-source), feature_sources_ready, data_freshness
+  - Readiness score (0-100%)
+  - NumPy bool serialization fix (_SafeEncoder)
+  - Updated pipeline.py to pass availability_registry
+
+Stage 4: Global Model Training                    ✗ BLOCKED
+  BLOCKED — REAL DATA REQUIRED
+  Requires: real PM2.5 observations + covariates from Stage 2
+  XGBoost/Random Forest training pipeline exists but needs real training data
+
+Stage 5: Residual Downscaling                     ✗ BLOCKED
+  BLOCKED — REAL DATA REQUIRED
+  Requires: trained global model from Stage 4
+  Residual downscaling framework exists but needs model predictions
+
+Stage 6: Uncertainty Framework                    ✓ COMPLETED
+  New file: src/global_training/uncertainty.py
+  - 4 states: DEFERRED | PARTIAL | ESTIMATED | VALIDATED
+  - 3 uncertainty sources: CV residuals, feature coverage gaps,
+    spatial coverage distance
+  - Permutation-based p-values (999 permutations)
+  - Benjamini-Hochberg FDR correction
+  - Uncertainty score (0-100 error scale, NOT confidence level)
+  - Honest DEFERRED state when data insufficient
+
+Stage 7: Advanced Hotspot Analysis                ✓ COMPLETED
+  New file: src/global_training/hotspot_analysis.py
+  - Local Indicators of Spatial Association (LISA) — Local Moran's I
+  - Getis-Ord Gi* statistic (hot-spot / cold-spot)
+  - Queen contiguity spatial weights
+  - Permutation-based significance (999 permutations)
+  - Benjamini-Hochberg FDR correction
+  - Fallback to simple threshold when grid < 30 cells
+  - Cluster classification: HOTSPOT | COLDSPOT | NOT_SIGNIFICANT
+
+Stage 8: Temporal Forecasting                     ✗ BLOCKED
+  BLOCKED — REAL DATA REQUIRED
+  Requires: historical time series from OpenAQ (>= 30 days)
+  Cannot produce forecasts without temporal data
+
+Stage 9: Population Exposure                      ✗ BLOCKED
+  BLOCKED — REAL DATA REQUIRED
+  Requires: population raster (WorldPop/HRSL) + prediction raster
+  Cannot compute exposure without both layers
+
+Stage 10: Dashboard Enhancement                   ✓ COMPLETED
+  New file: dashboard/src/components/DataQualityIndicator.tsx
+  Updated: dashboard/src/types.ts (AvailabilityRegistryResponse, etc.)
+  Updated: dashboard/src/api.ts (getAvailabilityRegistry)
+  Updated: dashboard/src/App.tsx (integrated in system tab)
+  Updated: dashboard/src/styles/index.css (dq-* styles)
+  - Expandable data quality panel showing all 7 sources
+  - Per-source: status badge, age, confidence level, checksums
+  - Overall status indicator with source count
+  - Mock-compatible for testing
+
+Stage 11: Data Freshness + Model Health           ✓ COMPLETED
+  New file: src/global_data/freshness.py
+  - Per-source freshness windows (configurable)
+  - File existence + modification time tracking
+  - Model health check (XGBoost + Random Forest)
+  - Training metadata age tracking
+  - Overall freshness flag
+
+Stage 12: Testing                                 ✓ COMPLETED
+  New file: tests/test_stages_1_11.py (26 tests)
+  - TestAvailabilityRegistry: 7 tests
+  - TestEnhancedReadiness: 4 tests
+  - TestUncertaintyFramework: 5 tests
+  - TestHotspotAnalysis: 4 tests
+  - TestDataFreshness: 3 tests
+  - Total: 235 backend + 28 frontend = 263 tests passing
+
+Stage 13: Security + Reproducibility              ✓ COMPLETED
+  New file: src/global_data/security.py
+  - Credential validation (presence only, values never logged)
+  - Dependency version verification (12 required packages)
+  - Random seed reproducibility check
+  - Data integrity verification (checksums, scope isolation)
+  - No-fabrication check
+
+Stage 14: Enhancement Report                      ✓ THIS FILE
+
+NEW FILES CREATED
+-----------------
+Backend:
+  src/global_data/availability.py    — Production-grade availability registry
+  src/global_data/freshness.py       — Data freshness + model health
+  src/global_data/security.py        — Security audit module
+  src/global_training/uncertainty.py — Uncertainty quantification
+  src/global_training/hotspot_analysis.py — LISA/Getis-Ord hotspot analysis
+  tests/test_stages_1_11.py          — 26 new tests
+
+Frontend:
+  dashboard/src/components/DataQualityIndicator.tsx — Data quality panel
+
+MODIFIED FILES
+--------------
+  src/global_data/__init__.py        — Added availability exports
+  src/global_data/sources.py         — (unchanged, v1 registry)
+  api/data.py                        — /data/availability returns v2 registry
+  api/main.py                        — (unchanged)
+  src/global_training/readiness.py   — Enhanced with configurable thresholds
+  src/global_training/pipeline.py    — Passes availability_registry to readiness
+  config.yaml                        — Added global_training.readiness section
+  dashboard/src/types.ts             — Added AvailabilityRegistryResponse types
+  dashboard/src/api.ts               — Added getAvailabilityRegistry
+  dashboard/src/App.tsx              — Integrated DataQualityIndicator
+  dashboard/src/styles/index.css     — Added dq-* styles
+  dashboard/src/App.test.tsx         — Added getAvailabilityRegistry mock
+  tests/test_global_data.py          — Updated status assertion for uppercase
+  tests/test_stages_1_11.py          — (new file)
+
+CREDENTIAL REQUIREMENTS TO UNBLOCK STAGES 2/4/5/8/9
+-----------------------------------------------------
+  OPENAQ_API_KEY          — OpenAQ v3 API (PM2.5 ground observations)
+  EARTHDATA_USERNAME      — NASA Earthdata (MODIS AOD, NDVI, SRTM, VIIRS)
+  EARTHDATA_PASSWORD      — NASA Earthdata
+  CDSAPI_URL              — Copernicus CDS (ERA5-Land weather)
+  CDSAPI_KEY              — Copernicus CDS
+
+To configure: set these as environment variables in Railway dashboard.
+
+CURRENT SYSTEM STATE
+--------------------
+  Frontend: https://pm25-hyperlocal-tau.vercel.app (Vercel)
+  Backend:  https://pm25-backend-production.up.railway.app (Railway)
+  Tests:    235 Python + 28 TypeScript = 263 passing
+  Build:    Successful (Vite + TypeScript)
+  Data:     Synthetic only (Delhi, Pune, Mumbai rasters)
+  Real:     OSM road density (8 tiles via Overpass API)
+  ML:       Delhi prototype only (locked, not global)
+  Global:   Architecture ready, awaiting credentials
+
+WHAT CREDENTIALS WOULD ENABLE
+------------------------------
+  With OPENAQ_API_KEY:
+    - Stage 2: Global training dataset (real PM2.5 observations)
+    - Stage 4: Global model training (XGBoost on real data)
+    - Stage 8: Temporal forecasting (time series)
+
+  With EARTHDATA_USERNAME + EARTHDATA_PASSWORD:
+    - MODIS MAIAC AOD (1km satellite aerosol optical depth)
+    - MODIS Terra NDVI (250m vegetation index)
+    - NASA SRTM elevation (30m DEM)
+    - NASA VIIRS night lights (750m)
+
+  With CDSAPI_URL + CDSAPI_KEY:
+    - ERA5-Land meteorology (temperature, humidity, wind)

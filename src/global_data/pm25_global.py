@@ -5,9 +5,10 @@ Acquires real PM2.5 observations from the OpenAQ v3 API. v2 is retired (HTTP
 the environment (``OPENAQ_API_KEY``). When the key is absent the source is
 reported UNAVAILABLE - never fabricated and never substituted with Delhi data.
 
-The pipeline:
-  fetch raw rows (paginated, retried) -> normalize to observation schema ->
-  unit-normalize to pm25_ug_m3 -> QC -> daily aggregation -> station outputs.
+v3 API workflow:
+  1. GET /v3/locations?parameter=pm25 — find all PM2.5 stations (paginate)
+  2. Filter by bbox client-side
+  3. GET /v3/sensors/{id}/days — get daily measurements per sensor
 """
 
 from __future__ import annotations
@@ -72,63 +73,198 @@ def check_availability(config) -> dict:
     }
 
 
-def _normalize_row(row: dict) -> Optional[dict]:
-    """Map one OpenAQ v3 measurement result to the observation schema."""
+import time as _time
+
+
+def _v3_get(base_url: str, api_key: str, endpoint: str, params: dict,
+            max_retries: int = 5) -> dict:
+    """Make a single OpenAQ v3 GET request with 429 rate-limit and connection retry."""
+    import requests
+
+    url = f"{base_url}/{endpoint.lstrip('/')}"
+    headers = {
+        "X-API-Key": api_key,
+        "User-Agent": "pm25-hyperlocal-m16/0.1",
+        "Accept": "application/json",
+    }
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=30)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+                requests.exceptions.ChunkedEncodingError) as exc:
+            wait = min(30 * (attempt + 1), 120)
+            logger.info("OpenAQ network error (attempt %d/%d), waiting %ds: %s",
+                        attempt + 1, max_retries, wait, exc)
+            _time.sleep(wait)
+            continue
+        if response.status_code == 401:
+            raise CredentialsUnavailable("OpenAQ API key rejected (401 Unauthorized).")
+        if response.status_code == 429:
+            retry_after = int(response.headers.get("Retry-After", 10))
+            wait = max(retry_after, 5 * (attempt + 1))
+            logger.info("OpenAQ rate limit hit (429), waiting %ds...", wait)
+            _time.sleep(wait)
+            continue
+        response.raise_for_status()
+        return response.json()
+    raise RuntimeError(f"OpenAQ: failed after {max_retries} retries on {endpoint}")
+
+
+def _find_pm25_locations(base_url: str, api_key: str,
+                         bounds: Optional[dict] = None) -> list[dict]:
+    """Find all PM2.5 monitoring locations within bounds.
+
+    Uses /v3/locations?parameter=pm25 and paginates, filtering by bbox.
+    For each location, picks the NEWEST PM2.5 sensor (highest datetimeLast).
+    Returns list of dicts with keys:
+    location_id, name, latitude, longitude, country, sensor_id.
+    """
+    if bounds is None:
+        return []
+
+    stations = []
+    seen_loc_ids = set()
+    page = 1
+    max_pages = 200
+    while page <= max_pages:
+        try:
+            data = _v3_get(base_url, api_key, "locations", {
+                "parameter": "pm25",
+                "limit": 100,
+                "page": page,
+            })
+        except Exception as exc:
+            logger.warning("OpenAQ: page %d failed after retries: %s; returning %d stations so far",
+                           page, exc, len(stations))
+            break
+        results = data.get("results", [])
+        if not results:
+            break
+
+        for loc in results:
+            coords = loc.get("coordinates") or {}
+            lat = coords.get("latitude")
+            lon = coords.get("longitude")
+            if lat is None or lon is None:
+                continue
+            if not (bounds["west"] <= lon <= bounds["east"]
+                    and bounds["south"] <= lat <= bounds["north"]):
+                continue
+
+            loc_id = loc.get("id")
+            if loc_id in seen_loc_ids:
+                continue
+            seen_loc_ids.add(loc_id)
+
+            # Pick the NEWEST PM2.5 sensor (by datetimeLast)
+            pm25_sensors = []
+            for sensor in loc.get("sensors", []):
+                param = sensor.get("parameter", {})
+                if param.get("name") == "pm25":
+                    pm25_sensors.append(sensor)
+            if not pm25_sensors:
+                continue
+
+            best_sensor = max(
+                pm25_sensors,
+                key=lambda s: (s.get("datetimeLast") or {}).get("utc", ""),
+            )
+
+            country_info = loc.get("country") or {}
+            stations.append({
+                "location_id": loc_id,
+                "name": loc.get("name", ""),
+                "latitude": float(lat),
+                "longitude": float(lon),
+                "country": country_info.get("code", "")
+                           if isinstance(country_info, dict)
+                           else str(country_info),
+                "sensor_id": best_sensor["id"],
+            })
+
+        if page % 20 == 0:
+            logger.info("OpenAQ: scanned %d pages, found %d PM2.5 stations in bounds",
+                        page, len(stations))
+        meta = data.get("meta", {})
+        total_found = meta.get("found", 0)
+        if isinstance(total_found, str):
+            try:
+                total_found = int(total_found)
+            except (ValueError, TypeError):
+                total_found = page * 100 + 1
+        if page * 100 >= total_found:
+            break
+        page += 1
+        _time.sleep(1.1)
+
+    logger.info("OpenAQ: found %d PM2.5 stations in bounds", len(stations))
+    return stations
+
+
+def _fetch_sensor_days(base_url: str, api_key: str, sensor_id: int,
+                       date_from: str, date_to: str) -> list[dict]:
+    """Fetch daily measurements for a specific sensor.
+
+    Uses /v3/sensors/{id}/days endpoint. Rate-limited to respect 429s.
+    """
+    all_results = []
+    page = 1
+    while page <= 50:
+        data = _v3_get(base_url, api_key, f"sensors/{sensor_id}/days", {
+            "date_from": date_from,
+            "date_to": date_to,
+            "limit": 100,
+            "page": page,
+        })
+        results = data.get("results", [])
+        if not results:
+            break
+        all_results.extend(results)
+        meta = data.get("meta", {})
+        total = meta.get("found", 0)
+        if isinstance(total, str):
+            total = len(all_results) + 1
+        if page * 100 >= total:
+            break
+        page += 1
+        _time.sleep(0.5)
+    return all_results
+
+
+def _normalize_sensor_day(day_row: dict, station: dict) -> Optional[dict]:
+    """Map one OpenAQ v3 /sensors/{id}/days result to the observation schema."""
     try:
-        value = row.get("value")
-        if value is None:
+        value = day_row.get("value")
+        if value is None or value < 0:
             return None
-        coords = row.get("coordinates") or {}
-        latitude = coords.get("latitude")
-        longitude = coords.get("longitude")
-        if latitude is None or longitude is None:
+        period = day_row.get("period", {})
+        datetime_obj = period.get("datetimeFrom") or period.get("datetimeTo")
+        if datetime_obj is None:
             return None
-        station = row.get("location") or {}
-        station_id = station.get("id") if isinstance(station, dict) else None
-        if station_id is None:
-            station_id = row.get("location_id")
-        if station_id is None:
-            return None
+        if isinstance(datetime_obj, dict):
+            datetime_obj = datetime_obj.get("utc", "")
+
         return {
-            "station_id": str(station_id),
+            "station_id": str(station["location_id"]),
             "source": "openaq",
-            "country": row.get("country") or station.get("country") or "",
-            "latitude": float(latitude),
-            "longitude": float(longitude),
-            "timestamp": row.get("datetime") or row.get("period", {}).get("datetimeFrom"),
+            "country": station.get("country", ""),
+            "latitude": station["latitude"],
+            "longitude": station["longitude"],
+            "timestamp": datetime_obj,
             "PM2.5": float(value),
-            "units": row.get("unit") or "ug/m3",
+            "units": day_row.get("unit") or "ug/m3",
             "quality_flag": "openaq_reported",
         }
     except (TypeError, ValueError):
         return None
 
 
-def _fetch_page(base_url: str, api_key: str, params: dict, attempt: int):
-    """Fetch a single OpenAQ v3 measurements page (raises on HTTP error)."""
-    import requests
-
-    url = f"{base_url}/measurements"
-    headers = {
-        "X-API-Key": api_key,
-        "User-Agent": "pm25-hyperlocal-m16/0.1",
-        "Accept": "application/json",
-    }
-    timeout = 30.0
-    response = requests.get(url, params=params, headers=headers, timeout=timeout)
-    if response.status_code == 401:
-        raise CredentialsUnavailable("OpenAQ API key rejected (401 Unauthorized).")
-    response.raise_for_status()
-    return response.json()
-
-
 def fetch_openaq_pm25(config, start_date: str, end_date: str,
-                      bounds: Optional[dict] = None,
-                      max_pages: int = 50) -> pd.DataFrame:
+                      bounds: Optional[dict] = None) -> pd.DataFrame:
     """Download normalized OpenAQ PM2.5 observations in [start, end].
 
-    Pagination follows the v3 ``links.next`` cursor. Every page is retried with
-    backoff; exhausted downloads raise DownloadError (logged as a failure).
+    v3 workflow: find locations → filter by bounds → fetch days per sensor.
     """
     cfg = _config_of(config)
     env_var = cfg.get("credential_env_var", "OPENAQ_API_KEY")
@@ -139,63 +275,37 @@ def fetch_openaq_pm25(config, start_date: str, end_date: str,
             "Global PM2.5 acquisition is UNAVAILABLE - no data fabricated."
         )
     base_url = cfg.get("base_url", "https://api.openaq.org/v3")
-    fetch_cfg = config.get("global_data", {}).get("fetch", {})
 
-    params = {
-        "parameter": "pm25",
-        "datetime_from": f"{start_date}T00:00:00Z",
-        "datetime_to": f"{end_date}T23:59:59Z",
-        "limit": 1000,
-        "offset": 0,
-    }
-    if bounds is not None:
-        center_lat = (bounds["south"] + bounds["north"]) / 2.0
-        center_lon = (bounds["west"] + bounds["east"]) / 2.0
-        radius = 1_500_000  # km-aware upper bound; bbox filtering below is exact.
-        params.update({"coordinates": f"{center_lon},{center_lat}", "radius": radius})
+    stations = _find_pm25_locations(base_url, api_key, bounds=bounds)
+    if not stations:
+        return pd.DataFrame(columns=OBSERVATION_SCHEMA)
 
+    logger.info("OpenAQ: fetching daily data for %d stations", len(stations))
     rows: list[dict] = []
-    seen_pages = 0
-    while seen_pages < max_pages:
-        page = fetch_with_retry(
-            lambda attempt, p=params: _fetch_page(base_url, api_key, p, attempt),
-            attempts=int(fetch_cfg.get("retries", 3)),
-            backoff_base_s=float(fetch_cfg.get("backoff_base_s", 2.0)),
-            backoff_max_s=float(fetch_cfg.get("backoff_max_s", 60.0)),
-        )
-        for item in page.get("results", []):
-            row = _normalize_row(item)
-            if row is not None:
-                rows.append(row)
-        seen_pages += 1
+    for i, station in enumerate(stations):
+        try:
+            days = _fetch_sensor_days(
+                base_url, api_key, station["sensor_id"],
+                start_date, end_date,
+            )
+            for day_row in days:
+                row = _normalize_sensor_day(day_row, station)
+                if row is not None:
+                    rows.append(row)
+        except Exception as exc:
+            logger.warning("OpenAQ sensor %d (%s) fetch failed: %s",
+                           station["sensor_id"], station["name"], exc)
 
-        links = page.get("links") or {}
-        next_link = links.get("next")
-        if not next_link:
-            break
-        next_url = next_link.get("url") if isinstance(next_link, dict) else str(next_link)
-        if not next_url or "offset=" not in next_url:
-            # Fallback: bump offset when the cursor is opaque.
-            params["offset"] = params.get("offset", 0) + params.get("limit", 1000)
-        else:
-            from urllib.parse import parse_qs, urlparse
+        if (i + 1) % 10 == 0:
+            logger.info("OpenAQ: processed %d/%d stations, %d rows so far",
+                        i + 1, len(stations), len(rows))
+        _time.sleep(1.1)
 
-            query = parse_qs(urlparse(next_url).query)
-            params["offset"] = int(query.get("offset", [0])[0])
-
-    frame = pd.DataFrame(rows, columns=[c for c in OBSERVATION_SCHEMA if True])
+    frame = pd.DataFrame(rows)
     for col in OBSERVATION_SCHEMA:
         if col not in frame.columns:
             frame[col] = None
     frame = frame[OBSERVATION_SCHEMA]
-
-    # Exact spatial filter (API radius is an approximation).
-    if bounds is not None and not frame.empty:
-        mask = (
-            frame["longitude"].between(bounds["west"], bounds["east"])
-            & frame["latitude"].between(bounds["south"], bounds["north"])
-        )
-        frame = frame[mask].copy()
 
     frame["timestamp"] = pd.to_datetime(frame["timestamp"], errors="coerce")
     frame["PM2.5"] = pd.to_numeric(frame["PM2.5"], errors="coerce")
@@ -233,7 +343,6 @@ def acquire_pm25(config, scope: str = "global", start_date: Optional[str] = None
         return report
 
     bounds = scope_bounds(scope)
-    time_cfg = config.get("global_data", {}).get("temporal", {})
     default_start = start_date or config.get("time", {}).get("start_date", "2025-01-01")
     default_end = end_date or config.get("time", {}).get("end_date", default_start)
 
@@ -256,7 +365,6 @@ def acquire_pm25(config, scope: str = "global", start_date: Optional[str] = None
         report["reason"] = "OpenAQ returned no PM2.5 observations in the requested window."
         return report
 
-    # Unit normalization -> QC -> daily -> stations.
     normalized, units_report = normalize_pm25_units(raw)
     clean, qc_report = apply_qc(
         normalized,

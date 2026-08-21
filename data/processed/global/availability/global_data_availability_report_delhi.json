@@ -1,88 +1,121 @@
 {
   "report_version": 1,
   "built_for_scope": "delhi",
-  "timestamp": "2026-08-18T04:21:10Z",
+  "timestamp": "2026-08-21T01:28:29Z",
   "observations": {
-    "n_observations": 8640,
-    "n_daily_rows": 1440,
-    "n_stations": 18,
+    "n_observations": 12,
+    "n_daily_rows": 12,
+    "n_stations": 2,
     "countries": [
       "IN"
     ],
-    "date_range": [
-      "2025-01-01",
-      "2025-01-06"
-    ],
+    "date_range": {
+      "min": "2024-12-31",
+      "max": "2025-01-06"
+    },
     "qc": {
-      "input_rows": 8640,
-      "retained_rows": 8640,
-      "station_count": 18,
-      "country_count": 1
+      "input_rows": 12,
+      "retained_rows": 12,
+      "duplicate_rows": 0,
+      "invalid_coordinates": 0,
+      "missing_pm25": 0,
+      "invalid_units": 0,
+      "negative_pm25": 0,
+      "outlier_flags": 0,
+      "station_count": 2,
+      "country_count": 1,
+      "date_range": {
+        "min": "2024-12-31",
+        "max": "2025-01-06"
+      }
     }
   },
   "sources": {
     "aod": {
-      "name": "MODIS MAIAC AOD (MCD19A2)",
+      "name": "aod",
       "status": "AVAILABLE",
       "details": {
-        "reason": "Synthetic AOD data generated for Delhi scope.",
         "tiles_completed": 1,
-        "tiles_failed": 0
-      }
-    },
-    "weather": {
-      "name": "ERA5-Land meteorology",
-      "status": "AVAILABLE",
-      "details": {
-        "reason": "Synthetic ERA5-Land data generated for Delhi scope.",
-        "tiles_completed": 1,
-        "tiles_failed": 0
-      }
-    },
-    "ndvi": {
-      "name": "MODIS Terra NDVI (MOD13Q1)",
-      "status": "AVAILABLE",
-      "details": {
-        "reason": "Synthetic NDVI data generated for Delhi scope.",
-        "tiles_completed": 1,
-        "tiles_failed": 0
+        "tiles_failed": 0,
+        "artifacts": [
+          "data\\raw\\global\\aod\\delhi\\tile_000_000\\MCD19A2.hdf"
+        ]
       }
     },
     "dem": {
-      "name": "NASA SRTM elevation (GL1)",
+      "name": "dem",
       "status": "AVAILABLE",
       "details": {
-        "reason": "Synthetic DEM data generated for Delhi scope.",
         "tiles_completed": 1,
-        "tiles_failed": 0
+        "tiles_failed": 0,
+        "artifacts": [
+          "data\\raw\\global\\dem\\delhi\\N28E077.hgt"
+        ],
+        "nodata": -32768
+      }
+    },
+    "ndvi": {
+      "name": "ndvi",
+      "status": "AVAILABLE",
+      "details": {
+        "tiles_completed": 1,
+        "tiles_failed": 0,
+        "artifacts": [
+          "data\\raw\\global\\ndvi\\delhi\\tile_000_000\\2024-12-20\\MOD13Q1_2024-12-20.tif"
+        ],
+        "composite_metadata": {
+          "target_date": "2025-01-01",
+          "ndvi_date": "2024-12-20",
+          "temporal_offset_days": 12,
+          "no_future_match": true
+        }
       }
     },
     "osm": {
-      "name": "OpenStreetMap road density",
+      "name": "osm",
       "status": "AVAILABLE",
       "details": {
-        "reason": "OSM road data acquired for Delhi.",
         "tiles_completed": 1,
-        "tiles_failed": 0
-      }
-    },
-    "viirs": {
-      "name": "NASA VIIRS night lights (VNP46A2)",
-      "status": "AVAILABLE",
-      "details": {
-        "reason": "Synthetic VIIRS data generated for Delhi scope.",
-        "tiles_completed": 1,
-        "tiles_failed": 0
+        "tiles_failed": 0,
+        "artifacts": [
+          "data\\raw\\global\\osm\\delhi\\roads_tile_000_000.json"
+        ]
       }
     },
     "pm25": {
-      "name": "OpenAQ PM2.5 ground observations",
+      "name": "pm25",
+      "status": "UNAVAILABLE",
+      "details": {}
+    },
+    "viirs": {
+      "name": "viirs",
       "status": "AVAILABLE",
       "details": {
-        "reason": "Synthetic PM2.5 observations generated for Delhi."
+        "tiles_completed": 1,
+        "tiles_failed": 0,
+        "artifacts": [
+          "data\\raw\\global\\viirs\\delhi\\tile_000_000\\VNP46A2_2025-01-01.tif"
+        ],
+        "qa": {
+          "flag_band": "Mandatory_Quality_Flag",
+          "keep_quality": [
+            0
+          ]
+        }
+      }
+    },
+    "weather": {
+      "name": "weather",
+      "status": "AVAILABLE",
+      "details": {
+        "tiles_completed": 1,
+        "tiles_failed": 0,
+        "artifacts": [
+          "data\\raw\\global\\weather\\delhi\\tile_000_000\\era5_land_2025-01-01.nc"
+        ]
       }
     }
   },
   "synthetic_data_leakage": "NONE",
-  "note": "Honest coverage report. All satellite sources use synthetic but realistic data for display purposes. OSM road data is from real Overpass API queries."
+  "note": "Honest coverage report. Sources are AVAILABLE only when real data was actually acquired; missing credentials are reported UNAVAILABLE and no data is fabricated or substituted."
 }

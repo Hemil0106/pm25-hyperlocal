@@ -1,0 +1,776 @@
+================================================================================
+        PM2.5 HYPERLOCAL MAPPING - COMPLETE PROJECT REPORT
+              Smart India Hackathon Prototype
+================================================================================
+Generated: August 2026
+Repository: https://github.com/Hemil0106/pm25-hyperlocal
+Frontend:  https://pm25-hyperlocal-tau.vercel.app
+Backend:   https://pm25-backend-production.up.railway.app
+Author:    Hemil Patle (Hemil0106)
+
+================================================================================
+  TABLE OF CONTENTS
+================================================================================
+
+  1.  Project Overview
+  2.  Problem Statement & Goals
+  3.  Architecture Overview
+  4.  Technology Stack
+  5.  Multi-City Support (Delhi, Pune, Mumbai)
+  6.  Backend API - Complete Endpoint Reference
+  7.  Frontend Dashboard - Feature Breakdown
+  8.  Data Pipeline (M1-M11) - Core Modules
+  9.  Globalization Layer (M12-M17) - Modules
+  10. Data Sources & Acquisition
+  11. ML Model Details
+  12. Map Layers & Visualization
+  13. UI/UX Design System
+  14. Testing Suite
+  15. Deployment Architecture
+  16. Environment Variables & Credentials
+  17. Scripts & Data Generation
+  18. Current Limitations
+  19. Milestone Completion Status
+  20. File Inventory Summary
+
+================================================================================
+  1. PROJECT OVERVIEW
+================================================================================
+
+PM2.5 Hyperlocal Mapping is a full-stack geospatial intelligence platform
+that generates 500m-resolution PM2.5 air quality maps for Indian cities by
+fusing satellite imagery, ground station observations, meteorological data,
+and topographic features using machine learning.
+
+The system consists of:
+  - A Python data pipeline (M1-M11) that ingests, QC's, and aligns data
+  - A global data acquisition framework (M16) for scalable data engineering
+  - A global training dataset builder (M17) with spatial validation
+  - A FastAPI backend serving pre-computed outputs via REST
+  - A React/TypeScript dashboard with MapLibre GL interactive maps
+
+Currently supports 3 cities: Delhi, Pune, Mumbai
+Target resolution: 500m PM2.5 prediction grids
+ML model: XGBoost (Delhi prototype_local scope)
+
+================================================================================
+  2. PROBLEM STATEMENT & GOALS
+================================================================================
+
+PROBLEM:
+  CPCB ground monitors are sparse (only ~4 stations per city). Satellite
+  aerosol products are coarse (~1km). There is no practical way to see
+  hyperlocal (500m) PM2.5 variation across a city in real time.
+
+GOALS:
+  1. Fuse multi-source data (satellite, ground, weather, GIS) into 500m grids
+  2. Train ML models (XGBoost + Random Forest) for PM2.5 prediction
+  3. Generate AQI sub-indices and pollution hotspot detection
+  4. Serve outputs through a professional interactive GIS dashboard
+  5. Build a scalable architecture supporting multi-city expansion
+  6. Maintain scientific honesty throughout (no fabricated data/metrics)
+
+APPROACH:
+  7-step pipeline: Data Ingestion -> QC -> Feature Engineering -> ML Training
+  -> Downscaling -> AQI+Hotspots -> Serving
+
+================================================================================
+  3. ARCHITECTURE OVERVIEW
+================================================================================
+
+DATA SOURCES               PROCESSING                 SERVING
+-----------                ----------                 -------
+Satellite (MODIS AOD)  ->                          ->  FastAPI (REST)
+Ground (CPCB PM2.5)    ->  Data Pipeline (M1-M11)  ->  GeoTIFF rasters
+Weather (ERA5-Land)    ->  Feature Engineering     ->  JSON metadata
+GIS (OSM, DEM, NDVI)   ->  ML Training (XGBoost)   ->  Station data
+VIIRS Night Lights     ->  500m Refinement          ->  Hotspot detection
+
+                                               ->  React Dashboard
+                                                  MapLibre GL maps
+                                                  Layer controls
+                                                  Location inspector
+
+DEPLOYMENT:
+  Frontend: Vercel (pm25-hyperlocal-tau.vercel.app)
+  Backend:  Railway (pm25-backend-production.up.railway.app)
+  Database: None (file-based GeoTIFF/JSON/CSV/Parquet)
+
+================================================================================
+  4. TECHNOLOGY STACK
+================================================================================
+
+BACKEND:
+  Language:    Python 3.11
+  Web:         FastAPI 0.141.1, Uvicorn 0.52.3
+  ML:          XGBoost 3.2.0, Random Forest (scikit-learn 1.7.2)
+  Explainability: SHAP 0.49.1
+  Geospatial:  rasterio 1.4.4, geopandas 1.1.4, pyproj 3.7.1
+  Data:        pandas 2.3.3, numpy 2.2.6, pyarrow 25.0.1
+  Satellite:   earthaccess 0.14.0 (NASA Harmony API), cdsapi (ERA5)
+  NetCDF:      netCDF4 1.7.4, xarray 2025.6.1, rioxarray 0.19.0
+  Validation:  pytest (28+ tests)
+  Config:      PyYAML 6.0.3
+
+FRONTEND:
+  Language:    TypeScript ~5.6.3
+  Framework:   React 18.3.1
+  Bundler:     Vite 5.4.11
+  Map:         MapLibre GL 4.7.1
+  GeoTIFF:     geotiff 2.1.3
+  Projection:  proj4 2.15.0
+  Testing:     Vitest 2.1.8, @testing-library/react 16.1.0
+
+INFRASTRUCTURE:
+  Frontend:    Vercel (GitHub auto-deploy)
+  Backend:     Railway (Docker deployment)
+  Repository:  GitHub (Hemil0106/pm25-hyperlocal)
+  Container:   Docker (Python 3.11-slim + GDAL/GEOS/PROJ)
+
+================================================================================
+  5. MULTI-CITY SUPPORT
+================================================================================
+
+CITIES:
+  1. Delhi   - Primary prototype, trained XGBoost model (18 stations)
+  2. Pune    - Synthetic data, no trained model yet
+  3. Mumbai  - Synthetic data, no trained model yet
+
+IMPLEMENTATION:
+  - City-aware data directory routing via _data_dir(city) helper
+  - All API endpoints accept optional ?city= query parameter
+  - city=None or city="delhi" uses root processed directory (backward compat)
+  - city="pune" uses data/processed/pune/
+  - city="mumbai" uses data/processed/mumbai/
+  - Frontend scope selector with animated flyTo transitions
+  - Region centers defined: Delhi (77.2, 28.6), Pune (73.85, 18.55),
+    Mumbai (72.85, 19.05)
+
+DATA PER CITY:
+  Delhi:   1 date of rasters (2025-01-01), 18 CPCB stations, 2576 hotspots
+  Pune:    6 dates of rasters (2025-01-01 to 06), 0 hotspots (realistic)
+  Mumbai:  6 dates of rasters (2025-01-01 to 06), hotspots at correct coords
+
+VALID_CITIES = {"delhi", "pune", "mumbai"}
+
+================================================================================
+  6. BACKEND API - COMPLETE ENDPOINT REFERENCE
+================================================================================
+
+SYSTEM:
+  GET /health                      - Health check (status, version, timestamp)
+  GET /available-dates?city=       - List available dates with raster data
+  GET /metadata?city=              - Full pipeline metadata JSON
+
+PM2.5:
+  GET /pm25?date=&lat=&lon=&resolution=&city=  - Point PM2.5 prediction
+  GET /pm25/grid?date=&resolution=&city=        - Grid metadata for a date
+
+AQI:
+  GET /aqi?date=&lat=&lon=&city=                - Point AQI sub-index
+
+LOCATION:
+  GET /location?date=&lat=&lon=&city=           - Full location inspection
+    Returns: PM2.5, AQI, category, uncertainty, model info, AOD status
+
+HOTSPOTS:
+  GET /hotspots?date=&city=                     - GeoJSON FeatureCollection
+  GET /hotspots/statistics?city=                - Aggregate hotspot stats
+
+STATIONS:
+  GET /stations?city=                           - Station list with coords
+  GET /stations/{station_id}?city=              - Station detail + history
+
+MODEL:
+  GET /feature-importance?city=                 - XGBoost feature importance
+  GET /uncertainty?city=                        - Uncertainty status (DEFERRED)
+
+RASTER SERVING:
+  GET /raster/pm25?date=&resolution=&city=      - PM2.5 GeoTIFF
+  GET /raster/aqi?date=&city=                   - AQI GeoTIFF
+  GET /raster/aod?date=&city=                   - AOD GeoTIFF
+
+GLOBALIZATION:
+  GET /global/regions                           - Region catalog
+  GET /global/countries                         - Countries with data
+  GET /global/aoi?region=&bbox=                 - AOI resolution
+  GET /global/datasets                          - Dataset registry
+  GET /global/data-availability?date=&region=   - Per-source availability
+  GET /global/model-scopes                      - Scope catalog
+  GET /global/output-metadata?region=&date=     - Scope-tagged output info
+  GET /global/pm25/bbox?date=&west=&south=&...  - Predictions in bbox
+
+GLOBAL DATA:
+  GET /data/sources?scope=                      - M16 source registry
+  GET /data/availability?scope=                 - Coverage report
+  GET /data/coverage?scope=                     - Alias of availability
+  GET /data/status?scope=                       - Compact overall status
+
+CORS ORIGINS:
+  http://localhost:5173
+  http://localhost:3000
+  http://127.0.0.1:5173
+  https://pm25-hyperlocal-tau.vercel.app
+  https://pm25-hyperlocal.netlify.app
+
+================================================================================
+  7. FRONTEND DASHBOARD - FEATURE BREAKDOWN
+================================================================================
+
+MAP:
+  - MapLibre GL with CARTO dark basemap (default)
+  - Light basemap toggle (CARTO Voyager) with sun/moon icons
+  - Animated city switching with map.flyTo()
+  - Raster overlay: PM2.5 500m, PM2.5 1km, AQI, AOD layers
+  - Station markers: 3-layer system (pulse + circle + label)
+  - Hotspot markers: 3-layer system (fill + glow + outline)
+  - Selection marker: Custom SVG target ring with animated pulse
+  - All layers re-added correctly after basemap style switch
+
+SIDEBAR (Tabbed):
+  - Overview Tab: Metric cards, location panel, hotspot stats
+  - Model & Data Tab: Feature importance, data sources, model info
+  - System Tab: Methodology panel, limitations panel, uncertainty
+
+HEADER:
+  - Project title with SIH Prototype badge
+  - Date selector dropdown
+  - DateAnimator (play/pause temporal animation, 1.2s interval)
+  - Model/mode/AOD status badges
+  - API online/offline indicator
+  - Region scope label (REGION_LABELS map for correct city names)
+
+FOOTER:
+  - Current city name with accent dot
+  - AOD status badge
+  - Version number
+  - SIH tagline
+
+LEGEND:
+  - PM2.5 color legend (CPCB bins)
+  - AQI category legend (GOOD through SEVERE)
+  - AOD bin legend (0.0-0.2 through 1.5+)
+  - Shows/hides based on active layer visibility
+
+LAYER CONTROL:
+  - Checkboxes: PM2.5 500m, PM2.5 1km, AQI, AOD, Stations, Hotspots
+  - PM2.5 opacity slider
+  - Empty hotspot state message for cities with 0 zones
+
+DESIGN SYSTEM (Dark Glassmorphic):
+  --bg: #0c1220
+  --glass-bg: rgba(17, 25, 39, 0.62)
+  backdrop-filter: blur(16px) saturate(180%)
+  --accent: #3da5f4
+  --ok: #34d399, --warn: #f59e0b, --danger: #f87171
+  8 keyframe animations, staggered panel entry
+
+METHODOLOGY PANEL:
+  6-step pipeline diagram (Data Acquisition -> QC -> Feature Engineering
+  -> ML Training -> Downscaling -> AQI -> Serving)
+  7 data sources listed
+  Scientific disclaimer
+
+LIMITATIONS PANEL:
+  6 items covering: trained model scope, 500m status, uncertainty deferred,
+  hotspot interpretation, AQI type, satellite vs. ground truth
+
+================================================================================
+  8. DATA PIPELINE (M1-M11) - CORE MODULES
+================================================================================
+
+src/data_pipeline.py (1691 lines - LOCKED):
+  Core data ingestion and QC for all local data sources:
+  - AOD (MODIS MCD19A2 via NASA Earthdata)
+  - CPCB ground PM2.5 observations (CSV, column normalization, dedup,
+    AOI filter, daily aggregation, QC reports)
+  - ERA5-Land weather (NetCDF, coordinate/variable normalization,
+    unit conversion, wind derivation, AOI clipping, time-window
+    selection, daily aggregation, QC, missing-data reporting)
+
+src/config.py:
+  Loads and validates config.yaml; project root, path helpers
+
+src/utils.py:
+  Shared utilities: logging, directory creation, JSON serialization,
+  config validation
+
+src/geospatial/:
+  aoi.py  - AOI resolution (named regions, bboxes, GeoJSON)
+  crs.py  - CRS handling (EPSG:4326, UTM per-AOI, EPSG:6933)
+  grid.py - AOI-dependent grid generation (1km/500m)
+  tiles.py - Tile-based processing for global/large AOIs
+
+================================================================================
+  9. GLOBALIZATION LAYER (M12-M17) - MODULES
+================================================================================
+
+MILESTONE 15 (Globalization - AOI-Configurable Platform):
+  src/globalization/aqi.py        - AQI scheme (india_cpcb, us_epa, none)
+  src/globalization/availability.py - Data availability manifest
+  src/globalization/cache.py      - Cache integration
+  src/globalization/datasets.py   - Dataset registry
+  src/globalization/downscaling.py - Scope-gated downscaling
+  src/globalization/ground_truth.py - Ground-truth normalization
+  src/globalization/hotspots.py   - Scope-gated hotspot detection
+  src/globalization/inference.py  - Scope-gated inference
+  src/globalization/ingestion.py  - AOI-aware data ingestion
+  src/globalization/model_scopes.py - Scope resolution & enforcement
+  src/globalization/training.py   - Global training schema
+  src/globalization/validation.py - Grouped spatial validation
+
+MILESTONE 16 (Global Data Acquisition):
+  src/global_data/aod_global.py     - AOD MODIS MAIAC adapter
+  src/global_data/cache.py          - Download caching, retry/backoff
+  src/global_data/coverage.py       - Coverage reports
+  src/global_data/dem_global.py     - DEM SRTM adapter
+  src/global_data/grid.py           - Common grid framework
+  src/global_data/ingest.py         - Acquisition orchestrator
+  src/global_data/integrity.py      - Artifact integrity checks
+  src/global_data/manifest.py       - Traceability manifest
+  src/global_data/ndvi_global.py    - NDVI MODIS adapter
+  src/global_data/normalize.py      - Spatial normalization
+  src/global_data/osm_global.py     - OSM road density adapter
+  src/global_data/pm25_global.py    - OpenAQ PM2.5 adapter
+  src/global_data/qc.py             - Observation quality control
+  src/global_data/satellite.py      - Shared satellite framework
+  src/global_data/scope.py          - Acquisition scopes
+  src/global_data/sources.py        - Data source registry
+  src/global_data/stations.py       - Station registry
+  src/global_data/temporal.py       - Daily normalization
+  src/global_data/temporal_join.py  - Temporal join
+  src/global_data/units.py          - Unit normalization
+  src/global_data/viirs_global.py   - VIIRS night lights adapter
+  src/global_data/weather_global.py - ERA5-Land adapter
+
+MILESTONE 17 (Global Training Dataset + Feature Engineering):
+  src/global_training/builder.py          - Training table builder
+  src/global_training/correlation.py      - Feature correlation diagnostics
+  src/global_training/coverage.py         - Feature coverage reports
+  src/global_training/features.py         - Feature engineering
+  src/global_training/groups.py           - Spatial validation groups
+  src/global_training/leakage.py          - Leakage checks
+  src/global_training/metadata.py         - Training-table metadata
+  src/global_training/osm_density.py      - OSM road-density loader
+  src/global_training/pipeline.py         - M17 orchestrator
+  src/global_training/qc.py               - Training-table QC
+  src/global_training/readiness.py        - Readiness gate
+  src/global_training/report.py           - Final report writer
+  src/global_training/representativeness.py - Geographic coverage
+  src/global_training/schema.py           - Training table schema
+  src/global_training/target.py           - Target variable report
+
+================================================================================
+  10. DATA SOURCES & ACQUISITION
+================================================================================
+
+SATELLITE:
+  AOD:    MODIS MAIAC MCD19A2 V061 (1km daily) - NASA Earthdata
+  NDVI:   MODIS Terra MOD13Q1 (250m 16-day) - NASA Earthdata
+  VIIRS:  NASA VNP46A2 (night lights) - NASA Earthdata
+
+GROUND:
+  PM2.5:  CPCB ground stations (OpenAQ v3 API) - OPENAQ_API_KEY
+
+WEATHER:
+  ERA5-Land meteorology (chunked) - Copernicus CDS - CDSAPI_URL/KEY
+
+GIS:
+  DEM:    NASA SRTM GL1 (elevation) - NASA Earthdata
+  OSM:    OpenStreetMap road density (Overpass API) - No credentials needed
+
+DATA STATUS:
+  - Delhi: synthetic but realistic data for all sources
+  - Pune:  synthetic data, OSM fetched live from Overpass API
+  - Mumbai: synthetic data, OSM fetched live from Overpass API
+  - Real AOD fetcher exists (fetch_real_aod.py) but needs Earthdata creds
+
+CREDENTIALS REQUIRED:
+  NASA_EARTHDATA_USERNAME, NASA_EARTHDATA_PASSWORD (AOD, NDVI, VIIRS, DEM)
+  CDSAPI_URL, CDSAPI_KEY (ERA5-Land weather)
+  OPENAQ_API_KEY (ground PM2.5 observations)
+
+================================================================================
+  11. ML MODEL DETAILS
+================================================================================
+
+MODEL: XGBoost (primary), Random Forest (secondary)
+STATUS: Trained only for Delhi (prototype_local scope)
+PERFORMANCE: Provisional / pipeline validation only
+
+FEATURES (Delhi):
+  - MODIS MAIAC AOD (Aerosol Optical Depth)
+  - ERA5-Land meteorology (temperature, humidity, wind u/v, pressure)
+  - NDVI (vegetation index)
+  - DEM (elevation)
+  - OSM road density
+  - VIIRS night-time lights
+  - Temporal cyclics (month, day_of_year, sin/cos encoding)
+  - Wind u/v components (derived from speed + direction)
+
+TRAINING:
+  - 16 training samples (minimum 20 needed for residual model)
+  - Leave-One-Station-Out cross-validation
+  - Downscaling: residual refinement (baseline prototype)
+  - Model scope: prototype_local (Delhi only)
+
+FEATURE IMPORTANCE (stored in models/model_metadata.json):
+  Per-feature XGBoost gain and Random Forest share
+
+OUTPUTS:
+  - 500m PM2.5 GeoTIFF rasters
+  - 1km PM2.5 GeoTIFF rasters (parent resolution)
+  - AQI sub-index rasters
+  - Hotspot detection (AQI category thresholds)
+  - Model metadata JSON
+
+================================================================================
+  12. MAP LAYERS & VISUALIZATION
+================================================================================
+
+RASTER LAYERS:
+  PM2.5 500m:  Colorized using PM25_BINS (green->yellow->red->purple)
+  PM2.5 1km:   Same color scheme, lower resolution overlay
+  AQI:         CPCB_CATEGORIES colors (Good->Satisfactory->Moderate->Poor)
+  AOD:         AOD_BINS (0.0-0.2 through 1.5+, blue->orange->red)
+
+VECTOR LAYERS:
+  Stations:    3-layer system
+    - stations-pulse: Blue circle with 0.15 opacity (background glow)
+    - stations-circle: 6px blue circle with white stroke
+    - stations-label: Station ID text label below
+
+  Hotspots:    3-layer system
+    - hotspots-fill: AQI-category-colored polygons (0.35 opacity)
+    - hotspots-glow: Lighter fill for glow effect (0.12 opacity)
+    - hotspots-outline: Purple line border (1.5px)
+
+  Selection:   Custom SVG marker
+    - Target crosshair ring with animated pulse
+    - Blue accent (#3da5f4) with transparency
+
+BASEMAPS:
+  Dark:  CARTO dark_all tiles (default)
+  Light: CARTO Voyager tiles (toggle via sun/moon icons)
+
+RASTER LOADING:
+  - GeoTIFF loaded via geotiff library
+  - Reprojected from source CRS to EPSG:4326 via proj4
+  - Colorized pixel-by-pixel using colormap bins
+  - Rendered as canvas overlay on MapLibre GL
+
+COLOORMAPS:
+  PM25_BINS:    6 bins from 0-30 to 300+ ug/m3
+  CPCB_CATEGORIES: 6 AQI categories (0-50 to 401-500)
+  AOD_BINS:     7 bins from 0.0-0.2 to 1.5+
+
+================================================================================
+  13. UI/UX DESIGN SYSTEM
+================================================================================
+
+THEME: Dark Glassmorphic
+  Background:    #0c1220
+  Glass panels:  rgba(17, 25, 39, 0.62) with blur(16px) saturate(180%)
+  Accent:        #3da5f4 (blue)
+  Success:       #34d399 (green)
+  Warning:       #f59e0b (amber)
+  Danger:        #f87171 (red)
+  Text:          #e2e8f0 (primary), #94a3b8 (secondary)
+
+ANIMATIONS (8 keyframes):
+  1. fadeIn      - Panel entrance
+  2. slideIn     - Sidebar sliding
+  3. pulse       - Station marker pulse
+  4. ripple      - Selection marker ripple
+  5. shimmer     - Loading skeleton
+  6. spin        - Loading spinner
+  7. fadeInUp    - Staggered panel entry
+  8. gradient    - Status badge shimmer
+
+TYPOGRAPHY:
+  Font: System fonts (Inter, Segoe UI, etc.)
+  Headings: 600-700 weight
+  Body: 400 weight
+  Mono: Consolas for data values
+
+COMPONENTS:
+  Panel:        Collapsible container with glass background
+  StatusPill:   Colored badge (ok/warn/danger/info)
+  SkeletonLines: Loading placeholder animation
+  ErrorBox:     Error message container
+  MetricCards:  Top stat display with color coding
+  Legend:       Color ramp visualization
+
+================================================================================
+  14. TESTING SUITE
+================================================================================
+
+BACKEND TESTS:
+  tests/test_api.py              - API endpoint tests
+  tests/test_global_data.py      - M16 data acquisition tests
+  tests/test_global_training.py  - M17 training dataset tests
+  tests/test_globalization.py    - M15 globalization tests
+  tests/test_milestone11_aqi.py  - AQI calculation tests
+  tests/test_milestone11_hotspots.py - Hotspot detection tests
+  tests/test_pipeline.py         - Pipeline integration tests
+
+FRONTEND TESTS (28 total):
+  dashboard/src/App.test.tsx     - 24 integration tests
+    - Rendering with real API data
+    - Backend unavailable state
+    - Date selector population
+    - Layer visibility toggling
+    - Location click with PM2.5/AQI display
+    - AQI never labeled as "National AQI"
+    - Uncertainty DEFERRED status
+    - Hotspot statistics display
+    - Model info panel without em-dashes
+    - Metric card states (empty/selected/NoData)
+    - Outside-AOI click handling
+    - Hotspot click with location update
+    - Station click with detail fetch
+    - Feature importance labels
+    - Limitations panel
+    - Date propagation to hotspot requests
+    - Region selector (Delhi/Pune/Mumbai/India/Global)
+    - Honest unavailable status for Global/India
+    - Data source status derivation
+    - Loading state display
+
+  dashboard/src/api.test.ts      - 4 unit tests
+    - Successful health response
+    - Parsed available dates
+    - HTTP 404 with server detail
+    - Network failure -> "Backend unavailable"
+
+TEST COMMANDS:
+  Backend:  pytest tests/
+  Frontend: npm test (vitest run)
+  Typecheck: npx tsc --noEmit
+
+================================================================================
+  15. DEPLOYMENT ARCHITECTURE
+================================================================================
+
+FRONTEND (Vercel):
+  URL:        https://pm25-hyperlocal-tau.vercel.app
+  Project:    pm25-hyperlocal (team: innov8x)
+  Framework:  Vite (auto-detected)
+  Root Dir:   dashboard/
+  Build:      tsc --noEmit && vite build
+  Output:     dist/
+  Env Var:    VITE_API_BASE_URL (set to Railway backend URL)
+  Deploy:     GitHub auto-deploy on push to master
+
+BACKEND (Railway):
+  URL:        https://pm25-backend-production.up.railway.app
+  Project:    pm25-backend (a1e17d0d-5cba-42c5-a1fa-8567dc232065)
+  Service:    c7186444-a8a0-4df6-8302-3978a6ffe5ac
+  Builder:    Docker (Dockerfile)
+  Base:       python:3.11-slim
+  System:     GDAL, GEOS, PROJ (geospatial libs)
+  CMD:        uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}
+  Env Vars:   CORS_ORIGINS (must include Vercel domain)
+  Deploy:     GitHub auto-deploy on push to master
+
+FORMER (Netlify - Credits Exhausted):
+  URL:        https://pm25-hyperlocal.netlify.app
+  Site ID:    683d3ebe-7531-4e6a-9c89-707c4be238f0
+  Status:     DEPRECATED (no credits remaining)
+
+DOCKER:
+  Dockerfile:
+    FROM python:3.11-slim
+    Install: libgdal-dev, gdal-bin, libgeos-dev, libproj-dev
+    WORKDIR: /app
+    Install requirements-prod.txt (83 pinned packages)
+    COPY . .
+    CMD: uvicorn api.main:app
+
+  .dockerignore:
+    Excludes: .venv/, node_modules/, .git/, __pycache__/, data/raw/*,
+              models/, logs/
+
+  railway.toml:
+    builder = "DOCKERFILE"
+    dockerfilePath = "Dockerfile"
+
+GIT:
+  Remote:     https://github.com/Hemil0106/pm25-hyperlocal.git
+  Branch:     master
+  Latest:     e5a7992 (force Railway to use Dockerfile builder)
+
+================================================================================
+  16. ENVIRONMENT VARIABLES & CREDENTIALS
+================================================================================
+
+BACKEND (.env / Railway):
+  CORS_ORIGINS       - Comma-separated allowed origins
+  NASA_EARTHDATA_USERNAME - NASA Earthdata login
+  NASA_EARTHDATA_PASSWORD - NASA Earthdata password
+  CDSAPI_URL         - Copernicus CDS API URL
+  CDSAPI_KEY         - Copernicus CDS API key
+  OPENAQ_API_KEY     - OpenAQ API key (unused in synthetic mode)
+
+FRONTEND (.env / Vercel):
+  VITE_API_BASE_URL  - Backend API base URL
+    (Production: https://pm25-backend-production.up.railway.app)
+    (Local: http://localhost:8000)
+
+================================================================================
+  17. SCRIPTS & DATA GENERATION
+================================================================================
+
+scripts/generate_city_data.py (407 lines):
+  Generates PM2.5/AQI spatial data for Pune and Mumbai.
+  Creates: GeoTIFF rasters (500m, 1km), AQI rasters, hotspot GeoJSON
+  with polygonization, station CSVs/parquets, feature importance,
+  model metadata, uncertainty status.
+  Usage: python scripts/generate_city_data.py
+
+scripts/generate_city_data_sources.py (323 lines):
+  Generates synthetic data source artifacts for all 3 cities.
+  Creates: availability reports, realistic metadata for AOD, weather,
+  NDVI, DEM, OSM, VIIRS, PM2.5 sources.
+  OSM data fetched live from Overpass API.
+  Usage: python scripts/generate_city_data_sources.py
+
+scripts/generate_synthetic_aod.py (69 lines):
+  Generates synthetic AOD rasters for all cities by reading existing
+  PM2.5 rasters and producing correlated AOD GeoTIFFs.
+  Formula: AOD = 0.08 + 0.018 * ln(1 + PM2.5) + spatial noise
+  Range: 0.01 - 2.0 (physically realistic)
+  Usage: python scripts/generate_synthetic_aod.py
+
+scripts/fetch_real_aod.py (315 lines):
+  Fetches real NASA MAIAC AOD (MCD19A2 V061) via Harmony API.
+  Authenticates with Earthdata credentials, subsets by bbox/date,
+  reprojects to UTM matching existing PM2.5 grids.
+  Returns GeoTIFF directly (no HDF4 conversion).
+  Requires: EARTHDATA_USERNAME, EARTHDATA_PASSWORD
+  Usage: python scripts/fetch_real_aod.py
+
+DATA FILES GENERATED:
+  data/processed/:
+    pm25_500m_{date}.tif       - PM2.5 500m GeoTIFF
+    pm25_1km_{date}.tif        - PM2.5 1km GeoTIFF
+    aqi_500m_{date}.tif        - AQI 500m GeoTIFF
+    aod_500m_{date}.tif        - AOD 500m GeoTIFF
+    pm25_500m_predictions.parquet - Grid predictions
+    hotspots_500m.geojson      - Hotspot polygons
+    hotspot_statistics.json    - Hotspot aggregates
+    stations_{city}.csv        - Station list
+    station_summary.parquet    - Station summary
+    daily_observations.parquet - Daily observations
+    final_metadata.json        - Pipeline metadata
+    feature_importance.csv     - ML feature importance
+    uncertainty_status.json    - Uncertainty report
+    *_availability.json        - Data source availability
+
+================================================================================
+  18. CURRENT LIMITATIONS
+================================================================================
+
+1. TRAINED MODEL SCOPE: XGBoost model trained only for Delhi
+   (prototype_local). Pune and Mumbai use parent-constant
+   downscaling (no trained residual model).
+
+2. 500m OUTPUT STATUS: 500m grid is baseline prototype.
+   Higher resolution does NOT imply higher accuracy.
+
+3. UNCERTAINTY: Deferred. No confidence intervals provided.
+   Model performance is provisional / pipeline validation only.
+
+4. HOTSPOT INTERPRETATION: Hotspots are predicted high-pollution
+   zones based on AQI category thresholds. They are NOT
+   confirmed emission sources.
+
+5. AQI TYPE: PM2.5-derived AQI sub-index only.
+   NOT full multi-pollutant National AQI.
+
+6. TRAINING DATA: Only 16 training samples for Delhi
+   (minimum 20 needed for residual model).
+   18 CPCB ground stations.
+
+7. AOD AVAILABILITY: Synthetic AOD data for all cities.
+   Real MAIAC AOD requires NASA Earthdata credentials.
+
+8. DATA FUSION NOTE: Predictions are model-based estimates,
+   NOT direct ground measurements. Should be interpreted
+   as relative spatial patterns, not absolute values.
+
+9. DOWNSCALING NOTE: 500m refinement is residual correction
+   of the 1km parent model, not independent high-res prediction.
+
+================================================================================
+  19. MILESTONE COMPLETION STATUS
+================================================================================
+
+M1  - Data Ingestion:           COMPLETE (LOCKED)
+M2  - Quality Control:          COMPLETE (LOCKED)
+M3  - Feature Engineering:      COMPLETE (LOCKED)
+M4  - ML Training (XGBoost):    COMPLETE (LOCKED)
+M5  - ML Training (RF):         COMPLETE (LOCKED)
+M6  - Feature Importance:       COMPLETE (LOCKED)
+M7  - Downscaling:              COMPLETE (LOCKED)
+M8  - AQI Calculation:          COMPLETE (LOCKED)
+M9  - Hotspot Detection:        COMPLETE (LOCKED)
+M10 - Station Processing:       COMPLETE (LOCKED)
+M11 - Output Generation:        COMPLETE (LOCKED)
+M12 - Training Schema:          COMPLETE (LOCKED)
+M13 - Model Scope Enforcement:  COMPLETE (LOCKED)
+M14 - Scope-Gated Inference:    COMPLETE (LOCKED)
+M15 - Globalization Platform:   COMPLETE (LOCKED)
+M16 - Global Data Acquisition:  COMPLETE (LOCKED)
+M17 - Global Training Dataset:  COMPLETE (LOCKED)
+
+POST-M17 FEATURES (Not locked):
+  - Multi-city support (Delhi, Pune, Mumbai)
+  - Dark glassmorphic UI overhaul
+  - Tabbed sidebar (Overview / Model & Data / System)
+  - Animated station/hotspot/selection markers
+  - CARTO dark + light basemap toggle
+  - DateAnimator temporal animation
+  - Methodology panel with pipeline diagram
+  - Hotspot empty state messaging
+  - Footer with city name, version, AOD badge
+  - Vercel deployment (replaced Netlify)
+  - Railway Docker deployment with CORS
+  - Real AOD fetcher script (Harmony API)
+  - Theme toggle layer preservation fix
+
+LOCKED CODE (Never rewrite):
+  - src/data_pipeline.py
+  - All M1-M16 modules in src/
+  - M17 code in src/global_training/
+
+DO NOT IMPLEMENT:
+  - Milestone 18 (or beyond)
+
+================================================================================
+  20. FILE INVENTORY SUMMARY
+================================================================================
+
+TOTAL FILES BY TYPE:
+  Python (.py):      ~70 files (src/, api/, tests/, scripts/)
+  TypeScript (.ts):  5 files (types, api, colormaps, raster, main)
+  TSX (.tsx):        17 files (App + 16 components)
+  CSS (.css):        1 file (index.css - full design system)
+  YAML (.yaml):      1 file (config.yaml)
+  JSON (.json):      ~15 files (metadata, configs, parquet markers)
+  GeoTIFF (.tif):    ~30 files (PM2.5, AQI, AOD rasters)
+  GeoJSON (.geojson): ~5 files (hotspots, AOI)
+  Markdown (.md):    5 files (README, reports, checklist)
+  Config:            Dockerfile, .dockerignore, railway.toml, netlify.toml
+  Test:              28 frontend tests, 7 test files (backend)
+
+TOTAL data/processed/ FILES: 151 files across all subdirectories
+
+DEPLOYMENT URLS:
+  Frontend:  https://pm25-hyperlocal-tau.vercel.app
+  Backend:   https://pm25-backend-production.up.railway.app
+  Repo:      https://github.com/Hemil0106/pm25-hyperlocal
+
+================================================================================
+                          END OF REPORT
+================================================================================
