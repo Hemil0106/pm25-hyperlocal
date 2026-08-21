@@ -55,10 +55,18 @@ class AQIResponse(BaseModel):
 
 class AODInfo(BaseModel):
     aod: Optional[float] = Field(default=None, description="Aerosol Optical Depth at 550nm")
+    status: str = Field(
+        default="AVAILABLE",
+        description="AVAILABLE | NO_VALID_OBSERVATION | DATASET_UNAVAILABLE | API_ERROR",
+    )
     source: str = Field(default="MODIS/MAIAC MCD19A2 v061")
     resolution_m: int = Field(default=500, description="Spatial resolution in meters")
     crs: Optional[str] = None
     date: Optional[str] = None
+    unit: str = Field(default="unitless", description="AOD is unitless (550nm extinction/vert.column)")
+    nodata: bool = Field(default=False, description="True if the exact pixel was nodata")
+    lookup: str = Field(default="exact_pixel", description="exact_pixel | nearest_valid_pixel")
+    distance_pixels: int = Field(default=0, description="Pixel distance to nearest valid if lookup != exact")
 
 
 class LocationResponse(BaseModel):

@@ -2,6 +2,9 @@ FROM python:3.11-slim
 
 LABEL maintainer="pm25-hyperlocal"
 
+# Cache bust timestamp: 2026-08-21 AOD activation
+ARG CACHE_BUST=20260821a
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdal-dev gdal-bin libgeos-dev libproj-dev \
     libhdf5-dev libhdf5-hld-0 libhdf5-openmpi-dev \

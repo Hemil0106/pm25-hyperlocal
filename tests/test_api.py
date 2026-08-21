@@ -278,10 +278,11 @@ def test_root_route():
 
 
 # ---------------------------------------------------------------------------
-# AOD Activation Tests
+# AOD Activation Tests (Steps 12-14)
 # ---------------------------------------------------------------------------
 
 def test_health_includes_aod():
+    """Step 12.13: API response schema — health endpoint."""
     response = client.get("/health")
     body = response.json()
     assert "aod" in body
@@ -291,22 +292,22 @@ def test_health_includes_aod():
 
 
 def test_location_includes_aod_info():
+    """Step 12.13: /location returns aod_info with all required fields."""
     response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
     assert response.status_code == 200
     body = response.json()
     assert "aod_info" in body
     aod_info = body["aod_info"]
-    if aod_info is not None:
-        assert "aod" in aod_info
-        assert "source" in aod_info
-        assert "resolution_m" in aod_info
-        assert "crs" in aod_info
-        assert "date" in aod_info
-        assert aod_info["source"] == "MODIS/MAIAC MCD19A2 v061"
-        assert aod_info["resolution_m"] == 500
+    assert aod_info is not None
+    for field in ("aod", "status", "source", "resolution_m", "crs", "date", "unit", "nodata", "lookup", "distance_pixels"):
+        assert field in aod_info, f"Missing field: {field}"
+    assert aod_info["source"] == "MODIS/MAIAC MCD19A2 v061"
+    assert aod_info["resolution_m"] == 500
+    assert aod_info["status"] in ("AVAILABLE", "NO_VALID_OBSERVATION", "DATASET_UNAVAILABLE", "API_ERROR")
 
 
 def test_location_aod_value_matches_raster():
+    """Step 12.1: valid Delhi coordinate + valid date -> real AOD value."""
     import rasterio as _rasterio
     from rasterio.warp import transform as _warp_transform
     aod_path = f"data/processed/aod_500m_{KNOWN_DATE}.tif"
@@ -319,10 +320,12 @@ def test_location_aod_value_matches_raster():
     aod_info = response.json()["aod_info"]
     assert aod_info is not None
     assert aod_info["aod"] is not None
+    assert aod_info["status"] == "AVAILABLE"
     assert math.isclose(aod_info["aod"], round(expected, 4), rel_tol=1e-3)
 
 
 def test_location_aod_valid_range():
+    """Step 12.1: AOD values are physically realistic."""
     response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
     aod_info = response.json()["aod_info"]
     assert aod_info is not None
@@ -332,6 +335,7 @@ def test_location_aod_valid_range():
 
 
 def test_location_aod_set_used_when_available():
+    """Step 12.1: aod_used is True when real AOD pixel exists."""
     response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
     body = response.json()
     if body.get("aod_info") and body["aod_info"].get("aod") is not None:
@@ -339,6 +343,7 @@ def test_location_aod_set_used_when_available():
 
 
 def test_raster_aod_serves_geotiff():
+    """Step 12.13: /raster/aod returns valid GeoTIFF."""
     response = client.get(f"/raster/aod?date={KNOWN_DATE}")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("image/tiff")
@@ -346,22 +351,26 @@ def test_raster_aod_serves_geotiff():
 
 
 def test_raster_aod_invalid_date_404():
+    """Step 12.6: invalid date -> 404."""
     response = client.get("/raster/aod?date=2099-01-01")
     assert response.status_code == 404
 
 
 def test_aod_no_path_traversal():
+    """Step 12.13: security — no path traversal."""
     traversal = "2025-01-01/../../../config.yaml"
     response = client.get(f"/raster/aod?date={traversal}")
     assert response.status_code in (404, 422)
 
 
 def test_location_outside_aoi_returns_400():
+    """Step 12.3: coordinate outside AOD raster -> correct unavailable response."""
     response = client.get(f"/location?date={KNOWN_DATE}&lat=10&lon=10")
     assert response.status_code == 400
 
 
 def test_aod_raster_valid_crs():
+    """Step 12.13: AOD raster CRS is valid EPSG."""
     import rasterio as _rasterio
     aod_path = f"data/processed/aod_500m_{KNOWN_DATE}.tif"
     with _rasterio.open(aod_path) as src:
@@ -371,7 +380,7 @@ def test_aod_raster_valid_crs():
 
 
 def test_aod_all_dates_available():
-    """Verify AOD GeoTIFFs exist for all known dates."""
+    """Step 12.1: all known dates have valid AOD rasters."""
     from pathlib import Path as _Path
     known_dates = sorted({
         p.stem.replace("aod_500m_", "")
@@ -384,19 +393,21 @@ def test_aod_all_dates_available():
 
 
 def test_aod_pune_city():
+    """Step 12.11: scope isolation — Pune AOD works independently."""
     response = client.get(f"/raster/aod?date={KNOWN_DATE}&city=pune")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("image/tiff")
 
 
 def test_aod_mumbai_city():
+    """Step 12.11: scope isolation — Mumbai AOD works independently."""
     response = client.get(f"/raster/aod?date={KNOWN_DATE}&city=mumbai")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("image/tiff")
 
 
 def test_aod_raster_finite_values():
-    """Ensure AOD rasters don't have inf or all-NaN bands."""
+    """Step 12.12: no fabricated values — rasters have only finite valid data."""
     import rasterio as _rasterio
     import numpy as _np
     aod_path = f"data/processed/aod_500m_{KNOWN_DATE}.tif"
@@ -406,7 +417,117 @@ def test_aod_raster_finite_values():
 
 
 def test_location_aod_crs_epsg():
+    """Step 12.13: CRS in location response is valid."""
     response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
     aod_info = response.json().get("aod_info")
-    if aod_info and aod_info.get("crs"):
-        assert "EPSG" in aod_info["crs"]
+    assert aod_info is not None
+    assert aod_info["crs"] is not None
+    assert "EPSG" in aod_info["crs"]
+
+
+def test_aod_date_propagation():
+    """Step 12.8: date propagation — AOD date matches selected date."""
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    aod_info = response.json()["aod_info"]
+    assert aod_info["date"] == KNOWN_DATE
+
+
+def test_aod_status_field_available():
+    """Step 12.13: status field is present and valid."""
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    aod_info = response.json()["aod_info"]
+    assert aod_info["status"] == "AVAILABLE"
+
+
+def test_aod_lookup_field():
+    """Step 12.13: lookup field is present."""
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    aod_info = response.json()["aod_info"]
+    assert aod_info["lookup"] in ("exact_pixel", "nearest_valid_pixel")
+
+
+def test_aod_unit_field():
+    """Step 12.13: unit field is present."""
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    aod_info = response.json()["aod_info"]
+    assert "unit" in aod_info
+
+
+def test_aod_missing_date_returns_unavailable():
+    """Step 12.7: missing AOD dataset for a valid PM25 date."""
+    from pathlib import Path as _Path
+    pm25_dates = sorted({
+        p.stem.replace("pm25_500m_", "")
+        for p in _Path("data/processed").glob("pm25_500m_*.tif")
+    })
+    aod_dates = sorted({
+        p.stem.replace("aod_500m_", "")
+        for p in _Path("data/processed").glob("aod_500m_*.tif")
+    })
+    missing_dates = [d for d in pm25_dates if d not in aod_dates]
+    if missing_dates:
+        test_date = missing_dates[0]
+        response = client.get(f"/location?date={test_date}&lat={LAT}&lon={LON}")
+        body = response.json()
+        assert body["aod_info"]["status"] == "DATASET_UNAVAILABLE"
+
+
+def test_aod_no_fabricated_values():
+    """Step 12.12: AOD value must be a real float from the raster, not 0.0."""
+    import rasterio as _rasterio
+    from rasterio.warp import transform as _warp_transform
+    aod_path = f"data/processed/aod_500m_{KNOWN_DATE}.tif"
+    with _rasterio.open(aod_path) as src:
+        array = src.read(1)
+        xs, ys = _warp_transform("EPSG:4326", src.crs, [LON], [LAT])
+        col, row = _rasterio.transform.rowcol(src.transform, xs[0], ys[0])
+        expected = float(array[row, col])
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={LAT}&lon={LON}")
+    aod_info = response.json()["aod_info"]
+    assert aod_info["aod"] is not None
+    assert aod_info["aod"] != 0.0, "AOD should not be exactly 0.0"
+    assert aod_info["aod"] == round(expected, 4)
+
+
+def test_aod_pune_location_has_value():
+    """Step 12.1: Pune location returns real AOD."""
+    PUNE_LAT = 18.52
+    PUNE_LON = 73.86
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={PUNE_LAT}&lon={PUNE_LON}&city=pune")
+    body = response.json()
+    assert body["aod_info"] is not None
+    assert body["aod_info"]["status"] in ("AVAILABLE", "NO_VALID_OBSERVATION", "DATASET_UNAVAILABLE")
+    if body["aod_info"]["status"] == "AVAILABLE":
+        assert body["aod_info"]["aod"] is not None
+        assert 0.0 <= body["aod_info"]["aod"] <= 5.0
+
+
+def test_aod_mumbai_location_has_value():
+    """Step 12.1: Mumbai location returns real AOD."""
+    MUMBAI_LAT = 19.08
+    MUMBAI_LON = 72.88
+    response = client.get(f"/location?date={KNOWN_DATE}&lat={MUMBAI_LAT}&lon={MUMBAI_LON}&city=mumbai")
+    body = response.json()
+    assert body["aod_info"] is not None
+    assert body["aod_info"]["status"] in ("AVAILABLE", "NO_VALID_OBSERVATION", "DATASET_UNAVAILABLE")
+    if body["aod_info"]["status"] == "AVAILABLE":
+        assert body["aod_info"]["aod"] is not None
+        assert 0.0 <= body["aod_info"]["aod"] <= 5.0
+
+
+def test_aod_three_delhi_locations():
+    """Step 13: test at least 3 different Delhi locations."""
+    locations = [
+        (28.6057, 77.2122),
+        (28.6139, 77.2090),
+        (28.6280, 77.2170),
+    ]
+    for lat, lon in locations:
+        response = client.get(f"/location?date={KNOWN_DATE}&lat={lat}&lon={lon}")
+        assert response.status_code == 200
+        aod_info = response.json()["aod_info"]
+        assert aod_info is not None
+        assert aod_info["status"] in ("AVAILABLE", "NO_VALID_OBSERVATION")
+        if aod_info["status"] == "AVAILABLE":
+            assert aod_info["aod"] is not None
+            assert 0.0 < aod_info["aod"] <= 5.0

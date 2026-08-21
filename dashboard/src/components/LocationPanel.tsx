@@ -130,13 +130,22 @@ export function LocationPanel({
           <div className="loc-row">
             <span className="loc-label">AOD</span>
             <span className="loc-value">
-              {location.aod_info?.aod != null ? (
+              {location.aod_info?.status === "AVAILABLE" && location.aod_info.aod != null ? (
                 <>
                   <span className="tech-value">{location.aod_info.aod.toFixed(3)}</span>
-                  <span className="loc-sub">{location.aod_info.source} ({location.aod_info.resolution_m}m)</span>
+                  <span className="loc-sub">
+                    {location.aod_info.source} ({location.aod_info.resolution_m}m)
+                    {location.aod_info.lookup === "nearest_valid_pixel" && (
+                      <> — nearest valid ({location.aod_info.distance_pixels}px)</>
+                    )}
+                  </span>
                 </>
-              ) : location.aod_used ? (
-                <span className="tech-value">Available</span>
+              ) : location.aod_info?.status === "NO_VALID_OBSERVATION" ? (
+                <span className="status-pill pill-na">No satellite observation</span>
+              ) : location.aod_info?.status === "DATASET_UNAVAILABLE" ? (
+                <span className="status-pill pill-na">Dataset unavailable</span>
+              ) : location.aod_info?.status === "API_ERROR" ? (
+                <span className="status-pill pill-na">Unable to retrieve</span>
               ) : (
                 <span className="status-pill pill-na">Unavailable</span>
               )}

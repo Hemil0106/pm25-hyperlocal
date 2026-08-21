@@ -113,14 +113,20 @@ export function MetricCards({
         <span className="metric-value">
           {locationLoading
             ? "…"
-            : location?.aod_info?.aod != null
+            : location?.aod_info?.status === "AVAILABLE" && location.aod_info.aod != null
               ? `${location.aod_info.aod.toFixed(3)}`
-              : hasSelection
-                ? "No data"
-                : "Select a location"}
+              : location?.aod_info?.status === "NO_VALID_OBSERVATION"
+                ? "No observation"
+                : location?.aod_info?.status === "DATASET_UNAVAILABLE"
+                  ? "Unavailable"
+                  : location?.aod_info?.status === "API_ERROR"
+                    ? "Error"
+                    : hasSelection
+                      ? "Unavailable"
+                      : "Select a location"}
         </span>
         <span className="metric-sub">
-          {location?.aod_info?.aod != null
+          {location?.aod_info?.status === "AVAILABLE"
             ? `${location.aod_info.source.split(" ")[0]} @ ${location.aod_info.resolution_m}m`
             : "aerosol optical depth 550nm"}
         </span>

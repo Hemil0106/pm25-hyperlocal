@@ -241,6 +241,75 @@ def _sample_raster(path: Path, lon: float, lat: float):
     return value
 
 
+AOD_NEAREST_RADIUS = 2
+
+
+def _sample_aod(path: Path, lon: float, lat: float) -> dict:
+    """Sample AOD raster with nearest-valid-pixel fallback.
+
+    Returns a dict with: value, status, lookup, distance_pixels, crs.
+    status is one of: AVAILABLE, NO_VALID_OBSERVATION, OUTSIDE_RASTER, API_ERROR.
+    """
+    import math as _math
+
+    try:
+        array, transform, nodata, crs, bounds = _read_raster(str(path))
+    except Exception:
+        return {"value": None, "status": "API_ERROR", "lookup": "exact_pixel", "distance_pixels": 0, "crs": None}
+
+    from rasterio.warp import transform as warp_transform
+
+    try:
+        xs, ys = warp_transform("EPSG:4326", crs, [lon], [lat])
+        col, row = rasterio.transform.rowcol(transform, xs[0], ys[0])
+    except Exception:
+        return {"value": None, "status": "API_ERROR", "lookup": "exact_pixel", "distance_pixels": 0, "crs": crs}
+
+    if row < 0 or row >= array.shape[0] or col < 0 or col >= array.shape[1]:
+        return {"value": None, "status": "OUTSIDE_RASTER", "lookup": "exact_pixel", "distance_pixels": 0, "crs": crs}
+
+    nodata_val = float(nodata) if nodata is not None else None
+
+    def _is_valid(r, c):
+        if r < 0 or r >= array.shape[0] or c < 0 or c >= array.shape[1]:
+            return False
+        v = float(array[r, c])
+        if nodata_val is not None and v == nodata_val:
+            return False
+        if _math.isnan(v) or _math.isinf(v):
+            return False
+        if v < 0:
+            return False
+        return True
+
+    if _is_valid(row, col):
+        return {"value": float(array[row, col]), "status": "AVAILABLE", "lookup": "exact_pixel", "distance_pixels": 0, "crs": crs}
+
+    for radius in range(1, AOD_NEAREST_RADIUS + 1):
+        best = None
+        best_dist = radius + 1
+        for dr in range(-radius, radius + 1):
+            for dc in range(-radius, radius + 1):
+                if abs(dr) != radius and abs(dc) != radius:
+                    continue
+                r, c = row + dr, col + dc
+                if _is_valid(r, c):
+                    dist = _math.sqrt(dr * dr + dc * dc)
+                    if dist < best_dist:
+                        best_dist = dist
+                        best = (r, c)
+        if best is not None:
+            return {
+                "value": float(array[best[0], best[1]]),
+                "status": "AVAILABLE",
+                "lookup": "nearest_valid_pixel",
+                "distance_pixels": int(round(best_dist)),
+                "crs": crs,
+            }
+
+    return {"value": None, "status": "NO_VALID_OBSERVATION", "lookup": "exact_pixel", "distance_pixels": 0, "crs": crs}
+
+
 @lru_cache(maxsize=4)
 def _aqi_categories():
     try:
@@ -424,20 +493,32 @@ def get_location(
     aod_info = None
     aod_path = d / AOD_500M_PATTERN.format(date=str(date))
     if aod_path.exists():
-        try:
-            aod_value = _sample_raster(aod_path, lon, lat)
-            _, aod_transform, aod_nodata, aod_crs, aod_bounds = _read_raster(str(aod_path))
+        aod_result = _sample_aod(aod_path, lon, lat)
+        if aod_result["status"] in ("API_ERROR", "OUTSIDE_RASTER"):
             aod_info = AODInfo(
-                aod=None if aod_value is None else round(aod_value, 4),
+                aod=None, status="DATASET_UNAVAILABLE",
+                source="MODIS/MAIAC MCD19A2 v061", resolution_m=500,
+                crs=aod_result.get("crs"), date=str(date),
+            )
+        else:
+            aod_info = AODInfo(
+                aod=None if aod_result["value"] is None else round(aod_result["value"], 4),
+                status=aod_result["status"],
                 source="MODIS/MAIAC MCD19A2 v061",
                 resolution_m=500,
-                crs=aod_crs,
+                crs=aod_result.get("crs"),
                 date=str(date),
+                nodata=(aod_result["status"] == "NO_VALID_OBSERVATION"),
+                lookup=aod_result["lookup"],
+                distance_pixels=aod_result["distance_pixels"],
             )
-            if aod_value is not None:
+            if aod_result["value"] is not None:
                 aod_used = True
-        except Exception:
-            aod_info = AODInfo(aod=None, source="MODIS/MAIAC MCD19A2 v061", resolution_m=500)
+    else:
+        aod_info = AODInfo(
+            aod=None, status="DATASET_UNAVAILABLE",
+            source="MODIS/MAIAC MCD19A2 v061", resolution_m=500,
+        )
 
     return LocationResponse(
         date=str(date),

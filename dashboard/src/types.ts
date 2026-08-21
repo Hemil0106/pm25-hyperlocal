@@ -46,10 +46,15 @@ export interface AQIResponse {
 
 export interface AODInfo {
   aod: number | null;
+  status: "AVAILABLE" | "NO_VALID_OBSERVATION" | "DATASET_UNAVAILABLE" | "API_ERROR";
   source: string;
   resolution_m: number;
   crs: string | null;
   date: string | null;
+  unit: string;
+  nodata: boolean;
+  lookup: "exact_pixel" | "nearest_valid_pixel";
+  distance_pixels: number;
 }
 
 export interface LocationResponse {
