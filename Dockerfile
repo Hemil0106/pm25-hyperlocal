@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+ARG CACHEBUST=2026-08-21-aod-fix
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdal-dev gdal-bin libgeos-dev libproj-dev \
     && rm -rf /var/lib/apt/lists/*
