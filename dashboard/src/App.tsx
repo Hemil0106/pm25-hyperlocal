@@ -383,10 +383,17 @@ export default function App() {
   }
 
   function handleLayerToggle(layer: keyof LayerVisibility) {
-    setVisibility((current) => ({
-      ...current,
-      [layer]: !current[layer],
-    }));
+    setVisibility((current) => {
+      const next = { ...current, [layer]: !current[layer] };
+      if (layer === "aod" && next.aod) {
+        next.pm25 = false;
+        next.pm25_1km = false;
+      }
+      if ((layer === "pm25" || layer === "pm25_1km") && (next.pm25 || next.pm25_1km)) {
+        next.aod = false;
+      }
+      return next;
+    });
   }
 
   function handleResolutionChange(next: "500m" | "1000m") {

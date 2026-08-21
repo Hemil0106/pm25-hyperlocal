@@ -26,17 +26,17 @@ export const PM25_BINS: { min: number; max: number; color: string }[] = [
 export const AQI_LEGEND = CPCB_CATEGORIES;
 export const PM25_LEGEND = PM25_BINS;
 
-/** AOD (Aerosol Optical Depth) bins — typical MODIS MAIAC range for Indian cities. */
+/** AOD (Aerosol Optical Depth) bins — blue-to-red diverging ramp for low-to-high haze. */
 export const AOD_BINS: { min: number; max: number; color: string }[] = [
-  { min: 0.0, max: 0.1, color: "#FFFFCC" },
-  { min: 0.1, max: 0.2, color: "#FFEDA0" },
-  { min: 0.2, max: 0.3, color: "#FED976" },
-  { min: 0.3, max: 0.4, color: "#FEB24C" },
-  { min: 0.4, max: 0.5, color: "#FD8D3C" },
-  { min: 0.5, max: 0.6, color: "#FC4E2A" },
-  { min: 0.6, max: 0.8, color: "#E31A1C" },
-  { min: 0.8, max: 1.0, color: "#BD0026" },
-  { min: 1.0, max: 2.0, color: "#800026" },
+  { min: 0.0, max: 0.05, color: "#4575B4" },
+  { min: 0.05, max: 0.1, color: "#74ADD1" },
+  { min: 0.1, max: 0.2, color: "#ABD9E9" },
+  { min: 0.2, max: 0.3, color: "#E0F3F8" },
+  { min: 0.3, max: 0.5, color: "#FEE090" },
+  { min: 0.5, max: 0.7, color: "#FDAE61" },
+  { min: 0.7, max: 1.0, color: "#F46D43" },
+  { min: 1.0, max: 1.5, color: "#D73027" },
+  { min: 1.5, max: 2.5, color: "#A50026" },
 ];
 
 export const AOD_LEGEND = AOD_BINS;
