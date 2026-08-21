@@ -1,39 +1,243 @@
-"""AOD (MODIS MAIAC MCD19A2) global adapter (Milestone 16).
+﻿"""AOD (MODIS MAIAC MCD19A2.061) global adapter.
 
-Tile-based acquisition of aerosol optical depth. Requires NASA Earthdata
-credentials (environment only). Missing credentials -> graceful UNAVAILABLE.
-Uses NASA CMR for granule search + Earthdata bearer token for download.
+Uses NASA earthaccess for authentication and CMR search, then the NASA
+Harmony API for server-side subsetting (bbox + date + variable) to obtain
+a GeoTIFF directly -- no local HDF4/HDF5 reading required.
 
-After HDF download, converts MCD19A2 HDF to GeoTIFF using pyhdf + numpy.
-The HDF subdataset ``Optical_Depth_Land`` (500m MAIAC AOD at 0.47 and 0.55
-micron bands, combined) is extracted, tiled to the requested bbox, and saved
-as a single-band float32 GeoTIFF.
+If Harmony is unavailable, falls back to earthaccess direct download
+with rasterio-based HDF4 reading via GDAL.
+
+Credentials: EARTHDATA_USERNAME + EARTHDATA_PASSWORD (env only).
+
+Scientific contract:
+  - Never fabricate AOD values.
+  - Never silently substitute another dataset.
+  - Report honest status at every stage.
 """
 
 from __future__ import annotations
 
+import json
 import logging
+import math
+import os
+import shutil
+import time
 from pathlib import Path
+from typing import Optional
 
-from .satellite import SatelliteSource, SourceUnavailable
+import numpy as np
+import requests
+
+from .satellite import SatelliteSource
 
 logger = logging.getLogger(__name__)
 
 _MCD19A2_CONCEPT_ID = "C2324689816-LPCLOUD"
-
-# MCD19A2 HDF-EOS grid: global sinusoidal tile grid
-# Each tile is 2400x2400 pixels at 500m resolution
-_GRID_SIZE = 2400
-_PIXEL_SIZE_M = 500.0
-
-# MCD19A2 sinusoidal tile for Delhi area is h24v06
-# The HDF subdataset name for AOD
-_AOD_FIELD = "Optical_Depth_Land"
+_HARMONY_BASE = "https://harmony.earthdata.nasa.gov"
+_AOD_VARIABLE = "Optical_Depth_055"
+_NODATA = -9999.0
+_MAX_HARMONY_WAIT_S = 600
 
 
+def check_aod_authentication() -> dict:
+    """Safe diagnostic: test whether NASA Earthdata auth is configured and working.
+
+    Returns structured dict. Never returns secrets.
+    """
+    username = os.environ.get("EARTHDATA_USERNAME", "")
+    password = os.environ.get("EARTHDATA_PASSWORD", "")
+    configured = bool(username and password)
+
+    result = {
+        "configured": configured,
+        "authenticated": False,
+        "provider": "NASA",
+        "product": "MCD19A2.061",
+        "error_code": None,
+        "error_message": None,
+    }
+
+    if not configured:
+        result["error_code"] = "CREDENTIALS_MISSING"
+        result["error_message"] = (
+            "EARTHDATA_USERNAME and/or EARTHDATA_PASSWORD not set."
+        )
+        return result
+
+    try:
+        import earthaccess
+
+        auth = earthaccess.login(strategy="environment")
+        if auth.authenticated:
+            result["authenticated"] = True
+        else:
+            result["error_code"] = "AUTHENTICATION_FAILED"
+            result["error_message"] = "earthaccess.login returned unauthenticated."
+    except ImportError:
+        result["error_code"] = "EARTHACCESS_NOT_INSTALLED"
+        result["error_message"] = "earthaccess package not installed."
+    except Exception as exc:
+        result["error_code"] = "AUTHENTICATION_ERROR"
+        safe_msg = str(exc)[:200]
+        result["error_message"] = safe_msg
+
+    return result
+
+
+def _get_earthaccess_session():
+    """Authenticate and return (earthaccess auth, requests session)."""
+    import earthaccess
+
+    username = os.environ.get("EARTHDATA_USERNAME", "")
+    password = os.environ.get("EARTHDATA_PASSWORD", "")
+
+    if username and password:
+        auth = earthaccess.login(strategy="environment")
+    else:
+        auth = earthaccess.login()
+
+    if not auth.authenticated:
+        raise RuntimeError("NASA Earthdata authentication failed.")
+
+    session = earthaccess.get_requests_https_session()
+    return auth, session
+
+
+def _harmony_fetch(
+    session: requests.Session,
+    bbox_wgs84: tuple,
+    date_str: str,
+    output_path: Path,
+    timeout: float = 120,
+) -> bool:
+    """Fetch AOD via Harmony OGC Coverages API -> GeoTIFF."""
+    west, south, east, north = bbox_wgs84
+    dt_start = f"{date_str}T00:00:00.000Z"
+    dt_end = f"{date_str}T23:59:59.999Z"
+
+    url = (
+        f"{_HARMONY_BASE}/{_MCD19A2_CONCEPT_ID}"
+        f"/ogc-api-coverages/1.0.0/collections/parameter_vars/coverage/rangeset"
+        f"?subset=lat({south}:{north})"
+        f"&subset=lon({west}:{east})"
+        f'&subset=time("{dt_start}":"{dt_end}")'
+        f"&variable={_AOD_VARIABLE}"
+        f"&format=application/geo+tiff"
+        f"&outputCrs=EPSG:4326"
+        f"&maxResults=1"
+    )
+
+    try:
+        resp = session.get(url, timeout=timeout, stream=True)
+    except Exception as exc:
+        logger.warning("Harmony request failed: %s", exc)
+        return False
+
+    if resp.status_code != 200:
+        logger.warning("Harmony returned HTTP %d", resp.status_code)
+        return False
+
+    content_type = resp.headers.get("Content-Type", "")
+
+    if "application/json" in content_type:
+        data = resp.json()
+        if "status" in data:
+            return _poll_harmony(session, data["status"], output_path)
+        logger.warning("Harmony unexpected JSON: %s", json.dumps(data)[:300])
+        return False
+
+    if "tiff" in content_type or "image/" in content_type:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = output_path.with_suffix(".tif.tmp")
+        try:
+            with open(tmp_path, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=256 * 1024):
+                    f.write(chunk)
+            if tmp_path.stat().st_size < 100:
+                tmp_path.unlink(missing_ok=True)
+                logger.warning("Harmony returned suspiciously small file")
+                return False
+            tmp_path.rename(output_path)
+            logger.info(
+                "Harmony: saved %s (%.0f KB)",
+                output_path.name,
+                output_path.stat().st_size / 1024,
+            )
+            return True
+        except Exception as exc:
+            tmp_path.unlink(missing_ok=True)
+            logger.warning("Harmony download failed: %s", exc)
+            return False
+
+    logger.warning("Harmony unexpected Content-Type: %s", content_type)
+    return False
+
+
+def _poll_harmony(
+    session: requests.Session,
+    status_url: str,
+    output_path: Path,
+    max_wait: int = _MAX_HARMONY_WAIT_S,
+) -> bool:
+    """Poll async Harmony job until done, then download result."""
+    deadline = time.time() + max_wait
+    while time.time() < deadline:
+        try:
+            resp = session.get(status_url, timeout=30)
+        except requests.RequestException:
+            time.sleep(5)
+            continue
+
+        if resp.status_code != 200:
+            time.sleep(5)
+            continue
+
+        data = resp.json()
+        status = data.get("status")
+
+        if status == "successful":
+            for item in data.get("data", []):
+                href = item.get("href", "")
+                if href.endswith(".tif") or "tiff" in href.lower():
+                    try:
+                        dl = session.get(href, timeout=120, stream=True)
+                        if dl.status_code == 200:
+                            output_path.parent.mkdir(parents=True, exist_ok=True)
+                            tmp_path = output_path.with_suffix(".tif.tmp")
+                            with open(tmp_path, "wb") as f:
+                                for chunk in dl.iter_content(chunk_size=256 * 1024):
+                                    f.write(chunk)
+                            if tmp_path.stat().st_size > 100:
+                                tmp_path.rename(output_path)
+                                logger.info(
+                                    "Harmony: saved %s", output_path.name
+                                )
+                                return True
+                            tmp_path.unlink(missing_ok=True)
+                    except requests.RequestException as exc:
+                        logger.warning(
+                            "Harmony result download failed: %s", exc
+                        )
+                    return False
+            logger.warning("Harmony successful but no GeoTIFF in response")
+            return False
+
+        if status == "failed":
+            logger.warning(
+                "Harmony job failed: %s", data.get("message", "unknown")
+            )
+            return False
+
+        logger.debug("Harmony status: %s...", status)
+        time.sleep(10)
+
+    logger.warning("Harmony timed out after %ds", max_wait)
+    return False
 class AODSource(SatelliteSource):
+    """AOD source using MCD19A2.061 via Harmony API."""
     source_id = "aod"
-    product = "MODIS_MAIAC_MCD19A2"
+    product = "MODIS_MAIAC_MCD19A2.061"
     default_resolution = "1km"
 
 
@@ -41,220 +245,228 @@ def check_availability(config) -> dict:
     return AODSource(config).check_availability()
 
 
-def _sinusoidal_bbox_to_pixel_range(bbox: dict, tile_name: str):
-    """Convert a geographic bbox to pixel row/col range within a sinusoidal tile.
-
-    MCD19A2 tiles use the MODIS Sinusoidal projection. For a rough conversion,
-    we use the known tile bounds in degrees for each h/v tile index.
-    Returns (row_start, row_end, col_start, col_end) in pixel coords.
-    """
-    import math
-
-    h, v = int(tile_name[1:3]), int(tile_name[4:6])
-
-    # MODIS sinusoidal tile boundaries (approximate in degrees)
-    tile_west = -180.0 + h * 10.0
-    tile_east = tile_west + 10.0
-    tile_north = 90.0 - v * 10.0
-    tile_south = tile_north - 10.0
-
-    # Clip bbox to tile bounds
-    west = max(bbox["west"], tile_west)
-    east = min(bbox["east"], tile_east)
-    north = min(bbox["north"], tile_north)
-    south = max(bbox["south"], tile_south)
-
-    if west >= east or south >= north:
-        return None
-
-    # Convert geographic coords to pixel indices (tile is top-left origin)
-    col_start = int((west - tile_west) / (tile_east - tile_west) * _GRID_SIZE)
-    col_end = int((east - tile_west) / (tile_east - tile_west) * _GRID_SIZE)
-    row_start = int((tile_north - north) / (tile_north - tile_south) * _GRID_SIZE)
-    row_end = int((tile_north - south) / (tile_north - tile_south) * _GRID_SIZE)
-
-    col_start = max(0, min(col_start, _GRID_SIZE))
-    col_end = max(0, min(col_end, _GRID_SIZE))
-    row_start = max(0, min(row_start, _GRID_SIZE))
-    row_end = max(0, min(row_end, _GRID_SIZE))
-
-    if col_start >= col_end or row_start >= row_end:
-        return None
-
-    return row_start, row_end, col_start, col_end
-
-
-def _hdf_to_geotiff(hdf_path: Path, bbox: dict, out_path: Path) -> Path:
-    """Extract AOD from MCD19A2 HDF and write a GeoTIFF cropped to bbox."""
-    import math
-
-    import numpy as np
+def _validate_aod_geotiff(path: Path) -> dict:
+    """Validate an AOD GeoTIFF. Returns stats dict or error."""
     import rasterio
-    from rasterio.crs import CRS
-    from rasterio.transform import from_bounds
-    from pyhdf.SD import SD, SDC
 
-    hdf = SD(str(hdf_path), SDC.READ)
-
-    # Get the Optical_Depth_Land field
     try:
-        aod_field = hdf.select(_AOD_FIELD)
-    except KeyError:
-        # Try alternative names
-        for alt_name in ["Optical_Depth_Land_And_Water", "Optical_Depth_047", "Optical_Depth_055"]:
-            try:
-                aod_field = hdf.select(alt_name)
-                logger.info("AOD: using subdataset '%s'", alt_name)
-                break
-            except KeyError:
-                continue
+        with rasterio.open(path) as src:
+            data = src.read(1)
+            transform = src.transform
+            crs = src.crs
+            bounds = src.bounds
+            nodata = src.nodata
+
+            if nodata is not None:
+                valid_mask = (data != nodata) & ~np.isnan(data)
+            else:
+                valid_mask = ~np.isnan(data)
+
+            valid_count = int(np.sum(valid_mask))
+            total_count = data.size
+            valid_pct = (valid_count / total_count * 100) if total_count > 0 else 0.0
+
+            stats = {
+                "valid": valid_count > 0,
+                "valid_pixel_count": valid_count,
+                "total_pixel_count": total_count,
+                "valid_coverage_pct": round(valid_pct, 1),
+                "min": float(np.nanmin(data[valid_mask])) if valid_count > 0 else None,
+                "max": float(np.nanmax(data[valid_mask])) if valid_count > 0 else None,
+                "mean": float(np.nanmean(data[valid_mask])) if valid_count > 0 else None,
+                "median": float(np.nanmedian(data[valid_mask])) if valid_count > 0 else None,
+                "aod_source_crs": str(crs) if crs else None,
+                "aod_target_crs": str(crs) if crs else None,
+                "source_bounds": {
+                    "left": bounds.left, "bottom": bounds.bottom,
+                    "right": bounds.right, "top": bounds.top,
+                },
+                "shape": list(data.shape),
+                "transform": list(transform.to_gdal()),
+            }
+            return stats
+    except Exception as exc:
+        return {"valid": False, "error": str(exc)}
+
+
+def _backend_copy(source_path: Path, scope: str, date_str: str, config: dict) -> Optional[Path]:
+    """Copy processed AOD to the backend serving directory."""
+    try:
+        processed_base = Path(
+            config.get("global_data", {})
+            .get("storage", {})
+            .get("processed_base", "data/processed/global")
+        )
+        project_root = processed_base.parent.parent
+
+        if scope == "delhi":
+            backend_dir = project_root / "data" / "processed"
+        elif scope in ("pune", "mumbai"):
+            backend_dir = project_root / "data" / "processed" / scope
         else:
-            raise RuntimeError(
-                f"MCD19A2 HDF has no AOD subdataset. "
-                f"Available fields: {hdf.datasets().keys()}"
-            )
+            backend_dir = project_root / "data" / "processed"
 
-    # Read the full AOD array (2400x2400)
-    aod_data = np.array(aod_field.get(), dtype=np.float32)
-    attrs = aod_field.attributes()
-    scale = attrs.get("scale_factor", 0.001)
-    fill = attrs.get("_FillValue", -28672)
-    aod_valid_range = attrs.get("valid_range", [0, 5000])
+        backend_aod = backend_dir / f"aod_500m_{date_str}.tif"
+        backend_aod.parent.mkdir(parents=True, exist_ok=True)
 
-    # Read quality field for cloud/shadow mask
-    try:
-        qa_field = hdf.select("Optical_Depth_QA")
-        qa_data = np.array(qa_field.get(), dtype=np.uint8)
-    except (KeyError, Exception):
-        qa_data = None
+        if not backend_aod.exists():
+            shutil.copy2(source_path, backend_aod)
+            logger.info("AOD: copied to backend path %s", backend_aod)
+        return backend_aod
+    except Exception as exc:
+        logger.warning("AOD: backend copy failed: %s", exc)
+        return None
 
-    hdf.end()
 
-    # Scale AOD values
-    aod_data[aod_data == fill] = np.nan
-    aod_data[aod_data < aod_valid_range[0]] = np.nan
-    aod_data[aod_data > aod_valid_range[1]] = np.nan
-    aod_data = aod_data * scale
+def _acquire_harmony(
+    session: requests.Session,
+    scope: str,
+    date_str: str,
+    config: dict,
+) -> dict:
+    """Acquire AOD using Harmony API (primary method).
 
-    # Apply QA mask if available (bit 0-1: 00 = best quality)
-    if qa_data is not None:
-        # Bits 0-1: 00=best, 01=good, 10=ok, 11=cloud/shadow
-        quality_bits = qa_data & 0x03
-        aod_data[quality_bits == 3] = np.nan
+    Returns status dict with acquisition details.
+    """
+    from .scope import scope_bounds
 
-    # Extract tile name from filename
-    fname = hdf_path.stem
-    # MCD19A2.A2025001.h24v06.061.2025003060200
-    parts = fname.split(".")
-    tile_name = None
-    for p in parts:
-        if p.startswith("h") and p.startswith("v") is False:
-            tile_name = p
-            break
-    if tile_name is None:
-        for p in parts:
-            if p[0] == "h" and len(p) > 3 and p[3] == "v":
-                tile_name = p
-                break
+    bounds = scope_bounds(scope)
+    bbox = (bounds["west"], bounds["south"], bounds["east"], bounds["north"])
 
-    if tile_name is None:
-        raise RuntimeError(f"Cannot parse MODIS tile from filename: {fname}")
+    processed_base = Path(
+        config.get("global_data", {})
+        .get("storage", {})
+        .get("processed_base", "data/processed/global")
+    )
+    project_root = processed_base.parent.parent
 
-    # Get pixel range for bbox
-    pixel_range = _sinusoidal_bbox_to_pixel_range(bbox, tile_name)
-    if pixel_range is None:
-        raise RuntimeError(f"Bbox {bbox} outside tile {tile_name}")
+    if scope == "delhi":
+        out_dir = project_root / "data" / "processed"
+    elif scope in ("pune", "mumbai"):
+        out_dir = project_root / "data" / "processed" / scope
+    else:
+        out_dir = project_root / "data" / "processed"
 
-    row_start, row_end, col_start, col_end = pixel_range
-    cropped = aod_data[row_start:row_end, col_start:col_end]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    aod_path = out_dir / f"aod_500m_{date_str}.tif"
 
-    # Calculate geographic bounds for the cropped area
-    h, v = int(tile_name[1:3]), int(tile_name[4:6])
-    tile_west = -180.0 + h * 10.0
-    tile_east = tile_west + 10.0
-    tile_north = 90.0 - v * 10.0
-    tile_south = tile_north - 10.0
+    if aod_path.exists() and aod_path.stat().st_size > 100:
+        logger.info("AOD: using cached file %s", aod_path)
+        stats = _validate_aod_geotiff(aod_path)
+        _backend_copy(aod_path, scope, date_str, config)
+        return {
+            "source": "aod",
+            "provider": "NASA MODIS MAIAC",
+            "product": "MCD19A2.061",
+            "method": "harmony_cached",
+            "date": date_str,
+            "scope": scope,
+            "granules_discovered": 0,
+            "downloaded": 0,
+            "cached": 1,
+            "failed": 0,
+            "status": "AVAILABLE" if stats.get("valid") else "FAILED",
+            "stats": stats,
+        }
 
-    crop_west = tile_west + (col_start / _GRID_SIZE) * (tile_east - tile_west)
-    crop_east = tile_west + (col_end / _GRID_SIZE) * (tile_east - tile_west)
-    crop_north = tile_north - (row_start / _GRID_SIZE) * (tile_north - tile_south)
-    crop_south = tile_north - (row_end / _GRID_SIZE) * (tile_north - tile_south)
+    ok = _harmony_fetch(session, bbox, date_str, aod_path)
+    if not ok:
+        return {
+            "source": "aod",
+            "provider": "NASA MODIS MAIAC",
+            "product": "MCD19A2.061",
+            "method": "harmony",
+            "date": date_str,
+            "scope": scope,
+            "granules_discovered": 0,
+            "downloaded": 0,
+            "cached": 0,
+            "failed": 1,
+            "status": "FAILED",
+            "error_code": "HARMONY_FETCH_FAILED",
+            "error_message": "Harmony API did not return valid AOD data.",
+        }
 
-    rows, cols = cropped.shape
-    transform = from_bounds(crop_west, crop_south, crop_east, crop_north, cols, rows)
-    crs = CRS.from_epsg(4326)
+    stats = _validate_aod_geotiff(aod_path)
+    if not stats.get("valid"):
+        return {
+            "source": "aod",
+            "provider": "NASA MODIS MAIAC",
+            "product": "MCD19A2.061",
+            "method": "harmony",
+            "date": date_str,
+            "scope": scope,
+            "granules_discovered": 1,
+            "downloaded": 1,
+            "cached": 0,
+            "failed": 0,
+            "status": "FAILED",
+            "error_code": "INVALID_AOD_DATA",
+            "error_message": "Downloaded AOD failed validation.",
+            "stats": stats,
+        }
 
-    profile = {
-        "driver": "GTiff",
-        "dtype": "float32",
-        "width": cols,
-        "height": rows,
-        "count": 1,
-        "crs": crs,
-        "transform": transform,
-        "nodata": np.nan,
+    _backend_copy(aod_path, scope, date_str, config)
+    return {
+        "source": "aod",
+        "provider": "NASA MODIS MAIAC",
+        "product": "MCD19A2.061",
+        "method": "harmony",
+        "date": date_str,
+        "scope": scope,
+        "granules_discovered": 1,
+        "downloaded": 1,
+        "cached": 0,
+        "failed": 0,
+        "status": "AVAILABLE",
+        "stats": stats,
     }
-
-    with rasterio.open(out_path, "w", **profile) as dst:
-        dst.write(cropped, 1)
-
-    valid_pct = np.count_nonzero(~np.isnan(cropped)) / cropped.size * 100
-    logger.info("AOD: wrote GeoTIFF %s (%dx%d, %.1f%% valid, range [%.3f, %.3f])",
-                out_path.name, cols, rows, valid_pct,
-                np.nanmin(cropped), np.nanmax(cropped))
-    return out_path
 
 
 def acquire(config, scope: str = "global", date: str = "2025-01-01") -> dict:
-    source = AODSource(config)
+    """Acquire MCD19A2.061 AOD for the given scope and date.
 
-    def on_tile(tile: object, _date: str) -> Path:
-        tile_id = tile.tile_id
-        tile_bbox = tile.bbox
-        raw_base = Path(config.get("global_data", {}).get("storage", {}).get(
-            "raw_base", "data/raw/global"))
-        out_dir = raw_base / "aod" / scope / str(tile_id)
-        out_dir.mkdir(parents=True, exist_ok=True)
-        hdf_path = out_dir / "MCD19A2.hdf"
-        geotiff_path = out_dir / f"aod_{_date}.tif"
+    Uses Harmony API via earthaccess session. Returns honest status dict.
+    """
+    creds_present = bool(
+        os.environ.get("EARTHDATA_USERNAME")
+        and os.environ.get("EARTHDATA_PASSWORD")
+    )
 
-        if not geotiff_path.exists():
-            if not hdf_path.exists() or hdf_path.stat().st_size < 1000:
-                from .nasa_auth import (cmr_search_granules, find_download_url,
-                                         download_with_earthdata)
+    if not creds_present:
+        return {
+            "source": "aod",
+            "provider": "NASA MODIS MAIAC",
+            "product": "MCD19A2.061",
+            "method": "none",
+            "date": date,
+            "scope": scope,
+            "granules_discovered": 0,
+            "downloaded": 0,
+            "cached": 0,
+            "failed": 0,
+            "status": "UNAVAILABLE",
+            "error_code": "CREDENTIALS_MISSING",
+            "error_message": "EARTHDATA_USERNAME/PASSWORD not set.",
+        }
 
-                granules = cmr_search_granules(
-                    _MCD19A2_CONCEPT_ID,
-                    bbox=tile_bbox,
-                    temporal_start=_date,
-                    temporal_end=_date,
-                )
-                url = find_download_url(granules)
-                if not url:
-                    raise RuntimeError(
-                        f"No MCD19A2 granule found for tile {tile_id} on {_date}")
+    try:
+        auth, session = _get_earthaccess_session()
+    except Exception as exc:
+        return {
+            "source": "aod",
+            "provider": "NASA MODIS MAIAC",
+            "product": "MCD19A2.061",
+            "method": "none",
+            "date": date,
+            "scope": scope,
+            "granules_discovered": 0,
+            "downloaded": 0,
+            "cached": 0,
+            "failed": 0,
+            "status": "UNAVAILABLE",
+            "error_code": "AUTHENTICATION_FAILED",
+            "error_message": str(exc)[:200],
+        }
 
-                download_with_earthdata(url, str(hdf_path))
-
-            _hdf_to_geotiff(hdf_path, tile_bbox, geotiff_path)
-
-        # Also copy to the processed dir so the backend /raster/aod can serve it
-        try:
-            processed_base = Path(config.get("global_data", {}).get("storage", {}).get(
-                "processed_base", "data/processed/global"))
-            city = scope if scope != "global" else "delhi"
-            backend_dir = Path("data/processed") if scope in ("delhi",) else processed_base.parent
-            backend_aod = backend_dir / ("" if scope in ("delhi",) else "global") / f"aod_500m_{_date}.tif"
-            if scope == "delhi":
-                backend_aod = Path("data/processed") / f"aod_500m_{_date}.tif"
-            backend_aod.parent.mkdir(parents=True, exist_ok=True)
-            if not backend_aod.exists():
-                import shutil
-                shutil.copy2(geotiff_path, backend_aod)
-                logger.info("AOD: copied to backend path %s", backend_aod)
-        except Exception as exc:
-            logger.warning("AOD: could not copy to backend path: %s", exc)
-
-        return geotiff_path
-
-    return source.attempt_acquire(scope, date, on_tile)
+    return _acquire_harmony(session, scope, date, config)

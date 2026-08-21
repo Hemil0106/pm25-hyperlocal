@@ -135,3 +135,91 @@ def get_data_status(scope: str = Query("global", description="global | india | d
         "ml_not_implemented": True,
         "prediction_not_implemented": True,
     }
+
+
+@router.get("/aod/status")
+def get_aod_status(scope: str = Query("delhi", description="delhi | pune | mumbai")):
+    """Safe AOD diagnostic endpoint. Never exposes secrets."""
+    import os
+    from pathlib import Path as _P
+
+    configured = bool(os.environ.get("EARTHDATA_USERNAME")) and bool(
+        os.environ.get("EARTHDATA_PASSWORD")
+    )
+
+    result = {
+        "provider": "NASA MODIS MAIAC",
+        "product": "MCD19A2.061",
+        "configured": configured,
+        "authenticated": False,
+        "latest_available_date": None,
+        "available_dates": [],
+        "coverage_pct": None,
+        "status": "UNAVAILABLE",
+        "error_code": None,
+        "error_message": None,
+    }
+
+    if not configured:
+        result["error_code"] = "CREDENTIALS_MISSING"
+        result["error_message"] = "EARTHDATA_USERNAME/PASSWORD not set."
+        return result
+
+    try:
+        from src.global_data.aod_global import check_aod_authentication
+
+        auth_info = check_aod_authentication()
+        result["authenticated"] = auth_info.get("authenticated", False)
+        if not result["authenticated"]:
+            result["error_code"] = auth_info.get("error_code")
+            result["error_message"] = auth_info.get("error_message")
+            return result
+    except Exception as exc:
+        result["error_code"] = "AUTH_CHECK_FAILED"
+        result["error_message"] = str(exc)[:200]
+        return result
+
+    processed = PROJECT_ROOT / "data" / "processed"
+    if scope in ("pune", "mumbai"):
+        processed = processed / scope
+
+    import glob
+
+    pattern = str(processed / "aod_500m_*.tif")
+    files = sorted(glob.glob(pattern))
+    if not files:
+        result["status"] = "NO_DATA"
+        result["error_code"] = "NO_AOD_FILES"
+        result["error_message"] = "No AOD GeoTIFF files found."
+        return result
+
+    dates = []
+    for f in files:
+        name = _P(f).stem
+        date_part = name.replace("aod_500m_", "")
+        dates.append(date_part)
+
+    result["available_dates"] = dates
+    result["latest_available_date"] = dates[-1] if dates else None
+    result["status"] = "AVAILABLE"
+
+    try:
+        import rasterio
+        import numpy as np
+
+        latest_path = _P(files[-1])
+        with rasterio.open(latest_path) as src:
+            data = src.read(1)
+            nodata = src.nodata
+            if nodata is not None:
+                valid = data[(data != nodata) & ~np.isnan(data)]
+            else:
+                valid = data[~np.isnan(data)]
+            total = data.size
+            result["coverage_pct"] = round(
+                float(len(valid) / total * 100) if total > 0 else 0, 1
+            )
+    except Exception:
+        pass
+
+    return result

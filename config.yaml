@@ -424,7 +424,7 @@ global_data:
   enabled: true
   # Default acquisition scope for `python run.py --global-data-only`.
   # Supported: delhi | pune | mumbai. Artifact scope must equal requested scope.
-  scope: "global"
+  scope: "delhi"
   common_grid:
     # 1 km framework is acquired per tile; 500 m is the target framework that a
     # future stage may build. A full global 500 m map is NEVER materialized.

@@ -70,8 +70,11 @@ def _last_fetch_timestamp(manifest_path: Path) -> Optional[str]:
 
 def _artifact_checksums(processed_base: Path, source_id: str) -> dict:
     """Collect SHA-256 checksums for artifacts belonging to a source."""
-    manifest_path = processed_base.parent / f"global_data_manifest_global.json"
+    manifest_path = processed_base.parent / f"global_data_manifest_{source_id}.json"
     manifest = _read_json(manifest_path)
+    if manifest is None:
+        manifest_path2 = processed_base.parent / "global_data_manifest_global.json"
+        manifest = _read_json(manifest_path2)
     if manifest is None:
         return {}
     return {
@@ -199,7 +202,7 @@ def build_availability_registry(
             # Credentials present + enabled. Check staleness.
             if last_fetch is None:
                 # Enabled + creds but never fetched. Try to check for artifacts.
-                raw_source_dir = processed_base.parent / "raw" / source_id
+                raw_source_dir = Path("data/raw/global") / source_id
                 if raw_source_dir.exists() and any(raw_source_dir.iterdir()):
                     status = STATUS_AVAILABLE
                     reason = None

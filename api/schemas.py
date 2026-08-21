@@ -14,7 +14,9 @@ class HealthResponse(BaseModel):
     status: str
     service: str
     version: str
+    build_version: Optional[str] = None
     timestamp: str
+    aod: Optional[dict] = None
 
 
 class DateResponse(BaseModel):

@@ -8,7 +8,9 @@ products from disk.
 
 import json
 import logging
+import os
 import time
+import subprocess as _sp
 from datetime import date, datetime, timezone
 from functools import lru_cache
 from pathlib import Path
@@ -64,6 +66,31 @@ API_VERSION = "0.1.1"
 PM25_UNITS = "\u00b5g/m\u00b3"
 AQI_TYPE = "PM2.5-derived AQI/sub-index"
 
+try:
+    _BUILD_VERSION = os.environ.get("BUILD_VERSION") or (
+        _sp.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=str(PROJECT_ROOT), timeout=5)
+        .decode().strip()
+    )
+except Exception:
+    _BUILD_VERSION = os.environ.get("RAILWAY_GIT_COMMIT_SHA", "unknown")[:7]
+
+try:
+    _GIT_COMMIT = (
+        _sp.check_output(["git", "rev-parse", "HEAD"], cwd=str(PROJECT_ROOT), timeout=5)
+        .decode().strip()
+    )
+except Exception:
+    _GIT_COMMIT = _BUILD_VERSION
+
+def _aod_health_info() -> dict:
+    """Safe AOD diagnostic for /health — never exposes secrets."""
+    configured = bool(os.environ.get("EARTHDATA_USERNAME")) and bool(os.environ.get("EARTHDATA_PASSWORD"))
+    return {
+        "configured": configured,
+        "provider": "NASA MODIS MAIAC",
+        "product": "MCD19A2.061",
+    }
+
 VALID_CITIES = {"delhi", "pune", "mumbai"}
 
 
@@ -88,8 +115,6 @@ def _model_metadata_path(city: str | None = None) -> Path:
 
 
 def _load_api_config():
-    import os
-
     try:
         config = load_config()
         api_cfg = config.get("api", {})
@@ -275,7 +300,9 @@ def health():
         status="ok",
         service=SERVICE_NAME,
         version=API_VERSION,
+        build_version=_BUILD_VERSION,
         timestamp=datetime.now(timezone.utc).isoformat(),
+        aod=_aod_health_info(),
     )
 
 

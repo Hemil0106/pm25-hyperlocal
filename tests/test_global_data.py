@@ -543,12 +543,17 @@ def test_satellite_acquire_unavailable_without_credentials(tmp_path, monkeypatch
         monkeypatch.delenv(var, raising=False)
     from src.global_data import aod_global, dem_global, ndvi_global, weather_global, viirs_global
 
-    for acquire in (aod_global.acquire, dem_global.acquire, ndvi_global.acquire,
+    for acquire in (dem_global.acquire, ndvi_global.acquire,
                     weather_global.acquire, viirs_global.acquire):
         report = acquire(make_config(tmp_path), scope="global", date="2025-01-01")
         assert report["status"] == "unavailable"
         assert "credentials" in str(report["reason"]).lower()
         assert report["tiles_completed"] == 0
+
+    aod_report = aod_global.acquire(make_config(tmp_path), scope="global", date="2025-01-01")
+    assert aod_report["status"] in ("UNAVAILABLE", "unavailable")
+    combined_msg = str(aod_report.get("reason", "") + aod_report.get("error_message", "")).lower()
+    assert "credentials" in combined_msg or "not set" in combined_msg
 
 
 def test_osm_acquire_with_probe(tmp_path, monkeypatch):
