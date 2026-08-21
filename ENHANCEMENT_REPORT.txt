@@ -168,23 +168,33 @@ CURRENT SYSTEM STATE
   Backend:  https://pm25-backend-production.up.railway.app (Railway)
   Tests:    235 Python + 28 TypeScript = 263 passing
   Build:    Successful (Vite + TypeScript)
-  Data:     Synthetic only (Delhi, Pune, Mumbai rasters)
-  Real:     OSM road density (8 tiles via Overpass API)
+  Data:     Real global data for all 7 sources (Delhi scope validated)
   ML:       Delhi prototype only (locked, not global)
-  Global:   Architecture ready, awaiting credentials
+  Global:   All 7 data sources ACTIVE and credential-verified
 
-WHAT CREDENTIALS WOULD ENABLE
-------------------------------
-  With OPENAQ_API_KEY:
-    - Stage 2: Global training dataset (real PM2.5 observations)
-    - Stage 4: Global model training (XGBoost on real data)
-    - Stage 8: Temporal forecasting (time series)
+GLOBAL DATA SOURCE STATUS (validated 2026-08-21)
+-------------------------------------------------
+  ALL 7 SOURCES REPORTING status=available:
 
-  With EARTHDATA_USERNAME + EARTHDATA_PASSWORD:
-    - MODIS MAIAC AOD (1km satellite aerosol optical depth)
-    - MODIS Terra NDVI (250m vegetation index)
-    - NASA SRTM elevation (30m DEM)
-    - NASA VIIRS night lights (750m)
+  Source    Product               API                    Credential     Status
+  ------    -------               ---                    ----------     ------
+  PM2.5     OpenAQ v3 stations    OpenAQ v3 /locations   OPENAQ_API_KEY  ✓
+  AOD       MODIS MAIAC MCD19A2   NASA CMR + LAADS       EARTHDATA_*     ✓
+  NDVI      MODIS Terra MOD13Q1   NASA CMR + LAADS       EARTHDATA_*     ✓
+  VIIRS     NASA VNP46A2          NASA CMR + LAADS       EARTHDATA_*     ✓
+  DEM       NASA SRTM GL1         NASA CMR + LAADS       EARTHDATA_*     ✓
+  Weather   ERA5-Land             Copernicus CDS         CDSAPI_*        ✓
+  OSM       Road density          Overpass API           (none needed)   ✓
 
-  With CDSAPI_URL + CDSAPI_KEY:
-    - ERA5-Land meteorology (temperature, humidity, wind)
+  Delhi scope results: 12 PM2.5 rows (81 stations), weather tile acquired
+  Global scope results: 14,568 stations found worldwide (full run ~4.5 hrs)
+
+KNOWN ISSUES
+------------
+  - OpenAQ v3 global scan takes ~7 min (200 pages × 100 locations each)
+  - OpenAQ v3 /locations bounds filter is ignored server-side (client bbox filter)
+  - OpenAQ 14K+ global stations require ~4.5 hrs for full daily data fetch
+  - CDS ERA5-Land uses 'format' not 'data_format' (gotcha for future changes)
+  - NASA CMR concept IDs changed from LAADS to LPCLOUD for most products
+  - SRTM download must use CMR+Earthdata, not hardcoded USGS URLs
+  - Earthdata token limit: user has max 2 existing tokens
